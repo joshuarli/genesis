@@ -4,9 +4,9 @@
 
 Goal: mrustc-derived Rust 1.99.1 on Linux x86-64/musl that builds and runs programs, plus Hex0 lower closure and clean replay.
 Base: no builds executed; docs only (research date 2026-10-30). No prior green to regress.
-Accepted: S1 (2026-10-30): doctor passes in ~1s; StageX 9bdf430d09ce pinned with hashes in `.work/pins/`. Red: none (baseline unbuilt). Parked: none.
-Next: S2 seed build (mrustc/minicargo compile and run), then S3 serially. Rustic lane X1 may run parallel (disjoint `.work/rustic/*`).
-Resume: S1 green. Run `./scripts/doctor.sh`; continue with S2 seed build via `scripts/launch.sh --until seed`. Preflight 2026-10-30; S1 accepted 2026-10-30.
+Accepted: S1 (2026-10-30): doctor passes in ~1s; StageX 9bdf430d09ce pinned with hashes in `.work/pins/`. S2 (2026-10-30): mrustc+minicargo built from pinned 0.12.0 (`c1ba35…` verified); both execute as musl/ELF; log `.work/logs/seed/mrustc-build.log` shows local `[CXX]` compilation; `make` rerun no-ops in 0.01 s; seed tree 120 MB, disk still 343.8 GB free. Deltas: host clang++ targets libstdc++ so StageX libc++ hardening define omitted; mrustc version stamp embeds ambient git commit (cosmetic, StageX stubs git). Red: none. Parked: X1-after-X0 (2026-10-30): Rustic X0 PASS (pure C source `8a9661a6…`, 317 MB, no objects/metadata, report `.work/rustic/GATE-X0.md`); X1 rebuild deferred — archive carries no sysroot (X2 gap) and S3 owns priority CPU; retry when S3 yields a test sysroot or owner admits the binary-toolchain asset as declared input.
+Next: S3 normalize + 1.90 seed validation, then S4 serially.
+Resume: S2 green. Run `./scripts/doctor.sh`; continue S3 (fetch rustc-1.90.0-src, `make RUSTCSRC`, seed rustc/cargo, run_rustc normalize, smoke outside build tree). X1 parked at X0 (see Parked). Preflight 2026-10-30; S1 accepted 2026-10-30; S2 accepted 2026-10-30.
 
 ## Charter
 

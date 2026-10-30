@@ -26,7 +26,7 @@ case "$UNTIL" in
   seed|seed-1.90)
     echo "launch: stage=$UNTIL prepared (S1 skeleton; S2 owns compilation)"
     echo "launch: dirs .work/build/seed .work/logs/seed ready; resumable rerun is no-op"
-    if [ -x "$ROOT/.work/build/seed/mrustc" ] && [ -x "$ROOT/.work/build/seed/minicargo" ]; then
+    if [ -x "$ROOT/.work/build/seed/mrustc-0.12.0/bin/mrustc" ] && [ -x "$ROOT/.work/build/seed/mrustc-0.12.0/bin/minicargo" ]; then
       echo "launch: seed binaries present (S2 built)"
     else
       echo "launch: seed binaries not yet built (expected until S2 runs)"
