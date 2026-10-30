@@ -1,0 +1,45 @@
+{
+ "item": "S4",
+ "date": "2026-10-30",
+ "triple": "x86_64-unknown-linux-musl",
+ "predecessor": ".work/artifacts/seed-1.90/install (rustc 1.90.0-stable-mrustc + cargo 1.90.0)",
+ "rustc": ".work/artifacts/1.91.1/prefix/bin/rustc",
+ "cargo": ".work/artifacts/1.91.1/prefix/bin/cargo",
+ "sysroot": ".work/artifacts/1.91.1/prefix/lib/rustlib/x86_64-unknown-linux-musl",
+ "rustc_version": "1.91.1 (ed61e7d7e 2025-11-07)",
+ "cargo_version": "1.91.1 (ea2d97820 2025-10-10)",
+ "llvm": {
+  "version": "21.1.8",
+  "root": ".work/artifacts/seed-1.90/llvm21/usr/lib/llvm21 (shared with S3)"
+ },
+ "build": {
+  "tool": "x.py (1.91.1 bootstrap, seed cargo builds helper)",
+  "jobs": 8,
+  "codegen_units": 32,
+  "target_cpu": "native",
+  "config": "vendor, --enable-local-rust, external LLVM 21, crt-static=false, optimize=2, no lld/llvm-tools",
+  "log": ".work/logs/1.91.1/build.log + build-attempt2/3.log"
+ },
+ "musl_policy": {
+  "compiler_host": "musl dynamic",
+  "produced_programs": "dynamic (-crt-static); static-musl NOT promised or tested"
+ },
+ "fixes": [
+  "PATH: seed bin first (ambient cargo too new for 1.91.1 bootstrap sources)",
+  "bootstrap.toml regenerated per run",
+  "llvm21-test-utils for FileCheck (3f3c89b9\u2026)",
+  "s4-compat-must-use.patch: 4 ineffective must_use in vendored portable-simd (seed denies where official 1.90 warns)",
+  "LIBRARY_PATH native unwind for clang-driven libstd.so link"
+ ],
+ "shim_status": "TLS-keys LD_PRELOAD still required while RUNNING mrustc-built rustc only; 1.91.1 runs natively (smoke with clean env) \u2014 shim retired as a runtime need from here on",
+ "borrowed_runtime": [
+  "host libz/libzstd/libstdc++/libgcc_s (rustc)",
+  "host ssl/crypto/curl stack (cargo)"
+ ],
+ "smoke": ".work/tmp/smoke-1.91.1 (hello/threads-TLS/unwind), clean env, no shim",
+ "retention": [
+  "seed prefix retained",
+  "1.91.1 prefix retained (770 MB)"
+ ],
+ "next": "S5: 1.91.1 -> 1.92.0 -> ... -> 1.96.0 reference endpoint"
+}
