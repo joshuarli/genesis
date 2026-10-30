@@ -1,0 +1,14 @@
+{
+ "item": "S5-rung",
+ "version": "1.92.0",
+ "date": "2026-10-30",
+ "predecessor": ".work/artifacts/1.91.1/prefix",
+ "rustc": ".work/artifacts/1.92.0/prefix/bin/rustc",
+ "cargo": ".work/artifacts/1.92.0/prefix/bin/cargo",
+ "sysroot": ".work/artifacts/1.92.0/prefix/lib/rustlib/x86_64-unknown-linux-musl",
+ "rustc_version": "1.92.0 (ded5c06cf 2025-12-08)",
+ "llvm": "21.1.8 (shared root)",
+ "compat_patch": ".work/build/1.92.0/compat-must-use.patch (same 4 lines as S4)",
+ "smoke": ".work/tmp/smoke-1.92.0 clean-env OK",
+ "link_note": "static LLVM; no dynamic unwind (static-only link dir works)"
+}
