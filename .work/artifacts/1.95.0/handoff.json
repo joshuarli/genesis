@@ -1,0 +1,12 @@
+{
+ "item": "S5-rung",
+ "version": "1.95.0",
+ "date": "2026-10-30",
+ "predecessor": ".work/artifacts/1.94.1/prefix",
+ "rustc": ".work/artifacts/1.95.0/prefix/bin/rustc",
+ "cargo": ".work/artifacts/1.95.0/prefix/bin/cargo",
+ "sysroot": ".work/artifacts/1.95.0/prefix/lib/rustlib/x86_64-unknown-linux-musl",
+ "rustc_version": "1.95.0 (59807616e 2026-04-14)",
+ "llvm": "21.1.8 (shared root)",
+ "smoke": ".work/tmp/smoke-1.95.0 clean-env OK"
+}
