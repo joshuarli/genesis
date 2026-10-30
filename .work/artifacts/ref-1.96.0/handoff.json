@@ -1,0 +1,48 @@
+{
+ "item": "S5",
+ "date": "2026-10-30",
+ "reference_endpoint": "1.96.0",
+ "predecessor": ".work/artifacts/1.95.0/prefix",
+ "rustc": ".work/artifacts/ref-1.96.0/prefix/bin/rustc",
+ "cargo": ".work/artifacts/ref-1.96.0/prefix/bin/cargo",
+ "sysroot": ".work/artifacts/ref-1.96.0/prefix/lib/rustlib/x86_64-unknown-linux-musl",
+ "rustc_version": "1.96.0 (ac68faa20 2026-05-25)",
+ "cargo_version": "1.96.0 (30a34c682 2026-05-25)",
+ "tools": [
+  "cargo",
+  "clippy",
+  "rustfmt",
+  "rust-demangler",
+  "src"
+ ],
+ "llvm": "21.1.8 (shared root; 1.96 gate >=21)",
+ "ladder": [
+  "1.91.1(seed)",
+  "1.92.0",
+  "1.93.1",
+  "1.94.1",
+  "1.95.0",
+  "1.96.0(final install)"
+ ],
+ "compat_patches": {
+  ".92": "compat-must-use.patch (4 lines)",
+  ".93+": "none (upstream fixed)"
+ },
+ "musl_policy": {
+  "default": "dynamic (spec crt_static_default=false, StageX policy)",
+  "static": "+crt-static verified static-pie via self-contained .a"
+ },
+ "deviations_from_recipe_prune": "kept self-contained *.a (required for static output); deleted install.log; sorted manifests",
+ "unwind_fix": "libunwind.so.1 bundled in ref sysroot lib (link path); 1.91.1 prefix got same repair after dynamic taint found",
+ "acceptance": "./scripts/launch.sh --until ref-1.96.0 --verify-local PASS; smoke dynamic+static OK",
+ "log": ".work/logs/ref-1.96.0/build.log (26 min final install, local leaf proven, no toolchain import)",
+ "retained": [
+  "seed-1.90",
+  "1.91.1",
+  "1.92.0",
+  "1.93.1",
+  "1.94.1",
+  "1.95.0",
+  "ref-1.96.0"
+ ]
+}

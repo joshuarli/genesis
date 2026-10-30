@@ -32,14 +32,35 @@ case "$UNTIL" in
       echo "launch: seed binaries not yet built (expected until S2 runs)"
     fi
     ;;
-  1.91.1|ref-1.96.0|ext-*|self-*)
-    echo "launch: stage $UNTIL not yet implemented (owned by S4/S5/S6/S7)" >&2
+  1.91.1|ext-*|self-*)
+    echo "launch: stage $UNTIL not yet implemented (owned by S4/S6/S7)" >&2
     exit 2
+    ;;
+  ref-1.96.0)
+    P="$ROOT/.work/artifacts/ref-1.96.0/prefix"
+    LOG="$ROOT/.work/logs/ref-1.96.0/build.log"
+    [ -x "$P/bin/rustc" ] || { echo "launch: ref-1.96.0 rustc missing" >&2; exit 1; }
+    [ -x "$P/bin/cargo" ] || { echo "launch: ref-1.96.0 cargo missing" >&2; exit 1; }
+    echo "launch: ref-1.96.0 present: $("$P/bin/rustc" --version), $("$P/bin/cargo" --version)"
+    if [ "$VERIFY_LOCAL" = "1" ]; then
+      [ -f "$LOG" ] || { echo "launch: leaf build log missing" >&2; exit 1; }
+      grep -q "BUILD_ONE_OK" "$LOG" || { echo "launch: no successful build marker" >&2; exit 1; }
+      grep -q "Building stage" "$LOG" || { echo "launch: no local stage-build evidence" >&2; exit 1; }
+      grep -q "Compiling core" "$LOG" || { echo "launch: no local core-compile evidence" >&2; exit 1; }
+      if grep -Ei "downloading (rustc|cargo|rust-std)|fetching toolchain|download-ci-llvm.*http" "$LOG"; then
+        echo "launch: toolchain download detected, not a local leaf build" >&2; exit 1
+      fi
+      for f in "$P/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-"*.rlib "$P/lib/librustc_driver-"*.so "$P/bin/cargo" "$P/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/libc.a"; do
+        [ -e "$f" ] || { echo "launch: required runtime file missing: $f" >&2; exit 1; }
+      done
+      echo "launch: verify-local PASS (local leaf build, no toolchain import, runtime files present)"
+      VERIFY_LOCAL=0
+    fi
     ;;
   *) echo "launch: unknown stage $UNTIL" >&2; exit 2;;
 esac
 if [ "$VERIFY_LOCAL" = "1" ]; then
-  echo "launch: --verify-local requires S5 leaf-build proof (not yet)" >&2
+  echo "launch: --verify-local only supported with --until ref-1.96.0" >&2
   exit 2
 fi
 if [ -n "$REBUILD" ]; then
