@@ -1,0 +1,38 @@
+{
+ "item": "S6",
+ "date": "2026-10-31",
+ "destination": "1.99.1",
+ "rustc": ".work/artifacts/ext-1.99.1/prefix/bin/rustc",
+ "rustc_version": "1.99.1 (58cf8f9c3 2026-10-13)",
+ "ladder": [
+  "1.95.0(seed-side)",
+  "1.96.1",
+  "1.97.1",
+  "1.98.1",
+  "1.99.1(final)"
+ ],
+ "llvm": {
+  "late": "23.1.4 root .work/artifacts/ext-1.99.1/llvm23 (destination fidelity; wrapper has 21/22/23 guards)",
+  "early_rungs": "21.1.8"
+ },
+ "source_pins": {
+  "1.96.1": "d0a9b519 (matches published .sha256)",
+  "1.97.1": "622c2b42 (matches)",
+  "1.98.1": "dc9f8b91 (matches)",
+  "1.99.1": "db56bbc6 (matches)"
+ },
+ "fixes": [
+  "RUST_MIN_STACK=16777216 for 1.99.1+LLVM23 only (Alpine triage; lto-cgu stack overflow)",
+  "libunwind.so bundled in 1.99.1 sysroot (dynamic default); static path via self-contained .a; lesson: drop LIBRARY_PATH from future drivers (dynamic-pick hazard), keep LD_LIBRARY_PATH for runtime"
+ ],
+ "musl_policy": {
+  "default": "dynamic (verified: ldd shows musl loader)",
+  "static": "+crt-static verified static-pie"
+ },
+ "acceptance": "smoke dynamic+static OK with output inspection; no toolchain downloads in log",
+ "retained": [
+  "1.96.0 reference untouched",
+  "1.95.0 common predecessor retained",
+  "ext chain retained"
+ ]
+}
