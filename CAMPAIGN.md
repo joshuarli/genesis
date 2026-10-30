@@ -4,9 +4,9 @@
 
 Goal: mrustc-derived Rust 1.99.1 on Linux x86-64/musl that builds and runs programs, plus Hex0 lower closure and clean replay.
 Base: no builds executed; docs only (research date 2026-10-30). No prior green to regress.
-Accepted: none. Red: none (baseline unbuilt). Parked: none.
-Next: S1 pin + doctor, then S2 seed build serially. Rustic lane X1 may run parallel (disjoint `.work/rustic/*`).
-Resume: read this file, run S1 acceptance, continue sequence. Preflight 2026-10-30.
+Accepted: S1 (2026-10-30): doctor passes in ~1s; StageX 9bdf430d09ce pinned with hashes in `.work/pins/`. Red: none (baseline unbuilt). Parked: none.
+Next: S2 seed build (mrustc/minicargo compile and run), then S3 serially. Rustic lane X1 may run parallel (disjoint `.work/rustic/*`).
+Resume: S1 green. Run `./scripts/doctor.sh`; continue with S2 seed build via `scripts/launch.sh --until seed`. Preflight 2026-10-30; S1 accepted 2026-10-30.
 
 ## Charter
 
