@@ -1,0 +1,15 @@
+{
+ "item": "S6-rung",
+ "version": "1.96.1",
+ "date": "2026-10-30",
+ "predecessor": ".work/artifacts/1.95.0/prefix (NOT 1.96.0; extension branches per charter)",
+ "rustc": ".work/artifacts/ext-1.96.1/prefix/bin/rustc",
+ "sysroot": ".work/artifacts/ext-1.96.1/prefix/lib/rustlib/x86_64-unknown-linux-musl",
+ "rustc_version": "1.96.1 (31fca3adb 2026-06-26)",
+ "llvm": "21.1.8 (gate >=21)",
+ "source_pin": {
+  "url": "https://static.rust-lang.org/dist/rustc-1.96.1-src.tar.gz",
+  "sha256": "d0a9b5198c41868538ae12af28064163551d06dcceab11ef0b1bc9aa6e98b7a7 (matches published .sha256)"
+ },
+ "smoke": ".work/tmp/smoke-ext-1.96.1 clean-env OK"
+}
