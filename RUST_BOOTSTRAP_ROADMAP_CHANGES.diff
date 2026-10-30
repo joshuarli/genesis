@@ -1,0 +1,398 @@
+--- v1/RUST_BOOTSTRAP_ROADMAP.md
++++ v2/RUST_BOOTSTRAP_ROADMAP.md
+@@ -1,10 +1,13 @@
+-# Rust bootstrap: feasibility-first implementation roadmap
++# Rust bootstrap: feasibility-first implementation roadmap — revision 2
+ 
+ **Research cut:** October 30, 2026  
++**Revision:** 2 — sanity/completeness and prior-art audit incorporated  
+ **Initial target:** Linux x86-64, musl, native execution  
+ **Frozen initial Rust destination:** 1.99.1  
+ **Working project name:** `rust-bootstrap` — a suggested name, not an existing repository claim  
+-**Status:** Researched implementation plan. No bootstrap build was executed while preparing this document.
++**Status:** Researched implementation plan. No bootstrap build was executed while preparing either revision.
++
++**Companion documents:** `AUDIT_AND_PRIOR_ART.md` explains the findings and changes; `RESEARCH_INDEX.md` contains additional references R01–R31; `CODING_AGENT_PROMPT.md` is the execution handoff. References S01–S24 remain in section 18. This revision supersedes the earlier roadmap, but deliberately retains its useful engineering work packages.
+ 
+ ## 0. The mandate
+ 
+@@ -19,6 +22,14 @@
+ A prebuilt official Rust toolchain may be used in an isolated diagnostic/control experiment. It must not silently supply a compiler, Cargo, standard library, procedural-macro library, or bootstrap executable to the accepted mrustc-derived Rust lineage. That distinction is the experiment, not an early security certification exercise.
+ 
+ Do not begin by writing a new C compiler, defining Core C, replacing LLVM, porting mrustc out of C++, building a kernel, or inventing a general-purpose package manager.
++
++### 0.1 Revision-2 implementation priority: reproduce before extracting
++
++Start by executing one pinned upstream recipe in its intended native environment. For the canonical musl route, use the selected StageX workflow and reproduce its inspected 1.96.0 endpoint. Keep the mrustc seed and first-release handoff as early observable checkpoints. Only then extend the release ladder or extract more standalone glue.
++
++Do not combine Gentoo's GCC integration, StageX's Clang patches, Tolnay's GNU configuration, and an arbitrary mrustc head into a new recipe before obtaining a reference result. Treat source, patches, C++ runtime, native libraries, LLVM, and seed-normalization logic as one compatibility bundle.
++
++A small wrapper can retain artifacts, expose existing stages, or record commands. A new general runner, test harness, cache service, or dependency resolver is not the first deliverable. Existing Make/BuildKit/Ninja/Cargo/bootstrap tools should do the work they already implement. [R01–R06]
+ 
+ ## 1. Define success precisely, without making it burdensome
+ 
+@@ -64,7 +75,7 @@
+ 
+ StageX separately documents a tiny x86 seed stage and a live-bootstrap-derived stage. The latter explicitly turns off kernel bootstrapping in the inspected recipe. Do not describe this containerized route as reconstructing the host kernel or hardware. [S09, S10]
+ 
+-**Consequence:** borrow the working musl integration first; bring the lower ancestry in later. Do not replace this with a glibc-based default just because another reference's setup uses Debian.
++**Consequence:** reproduce the pinned musl integration before assembling a new adapter; bring the lower ancestry in later. A separate GNU/glibc control build is permissible for diagnosing a blocker, but does not replace the musl target. Keep the exact reference endpoint distinct from the later extension.
+ 
+ ### 2.4 Rust's internal staging is not the same as the release ladder
+ 
+@@ -84,6 +95,20 @@
+ 
+ **Consequence:** implement checkpointing and C/C++ caching first. Add measured Rust object caching later, without building a second bootstrap problem around the cache helper.
+ 
++### 2.6 Distribution integration deserves first-class reuse
++
++Gentoo has both an mrustc package and a dedicated `mrustc_bootstrap()` procedure in its Rust package. Guix has a separately organized Rust 1.90 bootstrap branch change. These are concrete normalization references, not merely background reading. Compare them when diagnosing a handoff; do not wholesale merge their environment and patch choices. [R01–R04]
++
++Alpine's inspected Rust 1.99.1 recipe and Chimera's 1.99.0 template are useful late-ladder musl packaging references. They consume existing Rust bootstrap packages and therefore do not replace the independent seed. [R07, R08]
++
++### 2.7 An optional C-snapshot experiment is now justified
++
++Rustic documents generated-C compiler snapshots. This deserves a separate bounded experiment, with acceptance gates in section 20, rather than exclusion from the research. It is not the same lineage as an independently implemented frontend, and the standalone C artifact must be tested separately from a compiler built normally using the backend. Preserve the canonical mrustc path. [R09–R15]
++
++### 2.8 Do not equate alternative backends with independent frontends
++
++The official Rust report on `rustc_codegen_gcc` supplies stronger self-bootstrap prior art than the earlier discussion acknowledged. Evaluate it in the later reduction phase, rather than implementing a new backend. gccrs and Cranelift have different roles and must not be treated as interchangeable seed solutions. [R16–R18]
++
+ ## 3. Scope and architectural decisions
+ 
+ ### 3.1 Initial execution target
+@@ -98,7 +123,7 @@
+ 
+ Rust 1.99.1 was announced on October 15, 2026. Freeze it for the initial implementation rather than following a floating `stable` target. A future update is a separate change after the baseline works. [S17]
+ 
+-An exact StageX 1.96.0 reproduction is a valuable checkpoint or diagnostic reference. Keep it distinct from the chosen ladder's 1.96.1 step; these are not interchangeable artifacts.
++An exact StageX 1.96.0 reproduction is the reference milestone before extension. Keep it distinct from the chosen ladder's 1.96.1 step; these are not interchangeable artifacts. Branch the extension from the last appropriate retained predecessor, using the selected per-release adapter. Do not invent a same-release edge simply to avoid showing two branches in the plan.
+ 
+ ### 3.3 Borrowed dependencies are a feature of the PoC
+ 
+@@ -123,9 +148,15 @@
+ 
+ ### 3.5 Keep the build logic unsurprising
+ 
+-Use POSIX shell for straightforward recipes. A small Python standard-library controller is acceptable for subprocess supervision, structured state, locking, and reports. Do not require Rust to run the bootstrap driver.
+-
+-Prefer a linear list of Rust releases and explicit prerequisites to a generic graph framework. Existing Make/CMake/Ninja/Cargo should remain responsible for their internal dependency tracking.
++Use upstream orchestration first. A pinned checkout plus a small overlay, a launch script, a test script, and a short manifest can be the whole initial repository. Use the recipe's existing language and shell behavior rather than porting it to POSIX shell while diagnosing the compiler.
++
++After a reference build exposes a specific usability gap, a small Python standard-library supervisor or POSIX-shell wrapper is acceptable. Its job is subprocess handling and reuse of known stage commands, not reimplementing Make/Cargo/BuildKit dependency tracking. The larger layout/CLI in section 11 is an optional later shape, not an initial checklist.
++
++### 3.6 Specify host versus produced-program policy
++
++Document the compiler's host libc, host triple, loader, C++ runtime, LLVM linkage, default output target, and produced-program static/dynamic policy separately. Dynamic intermediate compilers are acceptable. They do not by themselves determine how user programs link.
++
++Preserve the reference package's policy for its reproduction, then choose this project's advertised target behavior deliberately. Test any separately promised static output and retain its required startup objects, builtins, unwind libraries, and native archives. See the policy audit before copying final-package pruning into an install step. [R05, R07, R08]
+ 
+ ## 4. Target architecture and interfaces
+ 
+@@ -165,7 +196,7 @@
+   lib/rustlib/<host>/codegen-backends/  # location where applicable
+ ```
+ 
+-Actual layout is determined by the pinned build, not forced to match this sketch. The controller records resolved paths and verifies them.
++Actual layout is determined by the pinned build, not forced to match this sketch. The upstream recipe or a thin wrapper records resolved paths and verifies them.
+ 
+ A handoff record includes the rustc path, Cargo path, sysroot, host triple, LLVM selection, native dependency root, and required runtime-loader environment. Never propagate only a `rustc --version` string.
+ 
+@@ -173,17 +204,19 @@
+ 
+ ## 5. Milestones and acceptance gates
+ 
+-### M0 — Establish a buildable environment and start real compilation
+-
+-**Goal:** obtain the first useful native artifact without a framework-building detour.
+-
+-Inspect the selected StageX revision, mrustc source, Rust source archives, and the release-ladder reference. Pin the actual revisions used. Set up persistent source, work, cache, log, and artifact directories. Install or import the known musl C/C++ and LLVM prerequisites.
+-
+-Implement only enough of `doctor`, `run`, and logging to launch mrustc's actual build. Confirm C and C++ hello-world programs compile and execute in the container. Confirm the chosen LLVM tools and libraries load. Check both disk and cgroup memory limits, not only the physical host's resources. For the later lower-chain phase, also execute the selected bootstrap seed and check any 32-bit x86 stages: an x86-64 host label alone is not a sufficient compatibility test.
+-
+-**Acceptance:** `mrustc` and `minicargo` build from source and execute. A log records compiler identities and the effective build command. Re-running the same build preserves useful work.
+-
+-**Do not require:** a polished CLI, arbitrary dependency graphs, signed artifacts, remote cache services, or complete source-only environment reconstruction.
++### M0 — Select the reference and start real compilation
++
++**Goal:** execute the known recipe rather than build a framework for it.
++
++Inspect and pin the selected StageX snapshot, dependency imports, mrustc/seed sources, patches, and existing target commands. Read the relevant Gentoo/Guix normalization material as comparison references, not as extra runtime dependencies. Make a small record of the selected compatibility bundle.
++
++Use the upstream package workflow and borrowed native prerequisites. Verify that the Rust leaf will actually execute locally instead of being satisfied by a preseeded final image. Keep effective commands and exit statuses in logs. A `doctor` command is optional; a reliable preflight shell script or existing upstream checks are sufficient.
++
++Verify native C/C++ execution, LLVM/runtime loading, disk capacity, and cgroup limits. Establish persistent paths without rewriting the container/dependency engine. In the later lower-chain phase, verify execution of the early seed and any 32-bit stages explicitly.
++
++**Acceptance:** mrustc and minicargo compile from source and run; commands and native identities are recorded; rerunning preserves useful work.
++
++**Do not require:** a CLI suite, new DAG/state engine, remote caches, signed artifacts, or an entire distribution rebuild.
+ 
+ ### M1 — Produce a functioning Rust 1.90 seed
+ 
+@@ -203,7 +236,7 @@
+ 
+ **Goal:** obtain a predecessor toolchain that the next Rust release can actually use.
+ 
+-Run the pinned recipe's `run_rustc`/native-library normalization procedure. Preserve its stage-specific directory and library conventions until the handoff works. Do not equate mrustc's intermediate library representation with the native rustc artifacts needed by `x.py`.
++Run the pinned recipe's `run_rustc`/native-library normalization procedure. Preserve its stage-specific directory and library conventions until the handoff works. Do not equate mrustc's intermediate library representation with the native rustc artifacts needed by `x.py`. Before inventing fixes, compare Gentoo's `mrustc_bootstrap()` and the Guix procedure for the failing stage, respecting each bundle's native-toolchain differences. [R01–R04]
+ 
+ Build Rust 1.91.1 using the normalized seed's rustc and Cargo. Produce its matching standard library and the Cargo needed for the next transition. Read the build output layout instead of guessing paths.
+ 
+@@ -211,19 +244,25 @@
+ 
+ This is the most important early feasibility gate. It exercises more of the real bootstrap than a seed binary printing its version.
+ 
+-### M3 — Complete the frozen release ladder
+-
+-**Goal:** advance the existing adjacent-release ladder through 1.99.1.
+-
+-For each release, create a versioned source/work directory, apply only its documented patch set, render a tag-appropriate bootstrap configuration, use explicit predecessor paths, and select a compatible LLVM artifact.
+-
+-Build only the tools and libraries required for the next handoff. Intermediate stage-1 builds are a desirable optimization **after** the adapter demonstrates that their compiler, libraries, and Cargo suffice. Do not force a guessed stage-1 recipe onto every release if the pinned reference needs a fuller build.
+-
+-After each release, execute smoke tests and install a checkpoint. Do not delete the predecessor until its successor has passed and the retained artifact policy is satisfied.
+-
+-**Acceptance:** 1.99.1 rustc, Cargo, and matching libraries are installed and can build/run the smoke workspace without a host Rust installation. A stage failure resumes from that release, not from mrustc.
+-
+-This is deliverable A.
++### M3a — Reproduce the selected reference endpoint
++
++**Goal:** finish the selected StageX recipe's 1.96.0 endpoint with its prescribed release sequence, patches, and native dependency choices.
++
++Preserve the seed and first-handoff checkpoints. Make only documented changes needed for observability, artifact retention, conservative resource limits, or a concrete environmental failure. Reuse the recipe's stage commands rather than guessing a new “minimal” build.
++
++**Acceptance:** the reference endpoint passes its declared functional checks; logs establish local Rust compilation rather than a final-layer import; required runtime files remain available. This is a reference reproduction, not yet the full destination milestone.
++
++### M3b — Extend the frozen release ladder to 1.99.1
++
++**Goal:** extend from the last appropriate common predecessor using the section-2.2 ladder. Keep the 1.96.0 reference result and 1.96.1 extension result separate.
++
++For each extension release, use a versioned prepared source/build directory, its exact patch series and tagged configuration, explicit predecessor rustc/Cargo/sysroot, and a compatible native/LLVM artifact. Use Alpine/Chimera packaging to investigate late-version musl failures; do not import their existing Rust bootstrap packages into this lineage. [R07, R08]
++
++Build only the tools and libraries the next handoff requires, using the successful reference's stage structure where applicable. Validate new tags rather than blindly copying all options. Keep predecessors and their native runtime libraries until successors pass.
++
++**Acceptance:** 1.99.1 rustc, Cargo, and matching libraries build and run the functional workspace without an ambient Rust installation. A failure resumes at its release. The reference/extension boundary and all imported non-Rust inputs are explicit.
++
++Together with the functional acceptance in M4, this completes deliverable A.
+ 
+ ### M4 — Demonstrate usability and a real same-version rebuild
+ 
+@@ -241,7 +280,7 @@
+ 
+ **Goal:** make routine fixes cheap without changing the accepted semantics unnecessarily.
+ 
+-Measure no-op reruns, single-recipe changes, C++ source changes, generated-C rebuilds, LLVM rebuilds, and a late Rust-stage retry. Separate compile time from linking, configuration, extraction, and archive export.
++Measure no-op reruns, single-recipe changes, C++ source changes, generated-C rebuilds, LLVM rebuilds, and a late Rust-stage retry. Separate compile time from linking, configuration, extraction, and archive export. Start with existing Rust bootstrap timing/resource metrics, Cargo `--timings`, ccache counters, and native build logs; do not implement a profiling dashboard. Verify metrics options at each tag. [R26, R27]
+ 
+ Remove accidental rebuilds before tuning compiler flags. Add sccache only where it demonstrably helps. Reuse an external LLVM build across compatible Rust stages after the first successful handoff using it. Evaluate a lower intermediate stage count on a separate configuration before adopting it.
+ 
+@@ -288,6 +327,8 @@
+ ### 6.1 Read these files before editing
+ 
+ In the pinned mrustc tree, read `README.md`, `Makefile`, `minicargo.mk`, `build-1.90.0.sh`, `TestRustcBootstrap.sh`, `run_rustc/Makefile`, the version-specific patch/override files, and the minicargo codegen scheduling code. Read the selected StageX Rust recipe and its patch manifest alongside them. [S01–S03, S08, S18]
++
++Also inspect Gentoo's `mrustc_bootstrap()` procedure and its mrustc source/override packaging, plus the Guix normalization change, before changing the seed-to-native handoff. Read called helpers before extracting distribution commands. [R01–R04]
+ 
+ Do not blindly run the oldest README download example. Do not assume a modern `master` script has exactly the behavior of the mrustc release selected by the distribution recipe.
+ 
+@@ -330,6 +371,10 @@
+ An accepted deviation needs a short entry: what it changes, why the current build needs it, which stages it affects, and the test that would permit its removal. This should take minutes of documentation, not a new governance process.
+ 
+ Avoid carrying identical patches twice when a newer pinned mrustc revision already includes them. Every patch application must either apply as intended or fail clearly; a rejected hunk is not a warning to ignore.
++
++Classify patches and source edits as **compatibility**, **distribution policy**, or **performance**. Retain coupled changes for reference reproduction; later remove one coherent group at a time. Keep generated-source/vendor sanitation separate from basic PoC feasibility, and never retain a checksum/lockfile workaround whose corresponding source modification was accidentally omitted. [R05]
++
++Resume must not mean reapplying the series to a partially modified tree. Record preparation identity; reprepare only the affected source when its patch set changes, without deleting independent predecessor prefixes.
+ 
+ ## 7. Work package: release-ladder adapters
+ 
+@@ -389,9 +434,11 @@
+ 
+ For development, an explicitly imported LLVM artifact is acceptable even while CI auto-download is disabled. Keep that choice visible rather than allowing the build system to choose an unrecorded LLVM behind the scenes.
+ 
+-### 7.4 Intermediate stage optimization
+-
+-Try to produce the smallest usable predecessor toolchain: compiler, matching native libraries, Cargo. Build the correct native library stage for the release's bootstrap model. If a faster stage-1 build works, keep it; if not, preserve the known-good fuller build and investigate separately.
++### 7.4 Intermediate stages: reuse demonstrated commands
++
++The inspected StageX recipe already uses stage-1 library and Cargo builds in its intermediate progression. That is an implementation reference to inspect, not a reason to invent a new stage convention. Preserve the working stage/library/Cargo relationship and validate it at every new release. [R05]
++
++When extracting the recipe, copy only the proven handoff logic and retain a fuller build as a diagnostic fallback. The fastest nominal stage is useless if its sysroot cannot run the next bootstrap or load host procedural macros.
+ 
+ Use a more complete final build at the frozen destination. Do not use local-rebuild/keep-stage shortcuts as evidence that a compiler was freshly rebuilt. Those switches belong to debugging profiles until their exact effect is understood. [S19]
+ 
+@@ -437,6 +484,10 @@
+ Dynamic linking is allowed for every intermediate compiler. Preserve required libraries and loader settings in each checkpoint. A later static-toolchain experiment must not destabilize the working bootstrap.
+ 
+ Do not globally force `panic=abort`. Compiler and test behavior may depend on unwinding. Preserve the chosen recipe's working exception/panic configuration and test it after normalization.
++
++Keep predecessor runtime libraries available side by side during LLVM upgrades. A successful compiler prefix that dynamically loads an overwritten shared library is not a stable checkpoint. Chimera's bootstrap packaging explicitly addresses this upgrade-cycle problem; use it as integration prior art. [R08]
++
++For late releases, consult current musl package fixes before changing compiler semantics. Alpine's inspected 1.99.1/LLVM-23 recipe includes a larger thread-stack setting and deliberate Cargo native-dependency choices. Treat them as version-specific evidence, not global mandatory flags. [R07]
+ 
+ ## 9. Work package: iterative build performance
+ 
+@@ -565,7 +616,11 @@
+ 
+ ## 11. Repository and controller design
+ 
+-### 11.1 Proposed initial layout
++### 11.1 Start smaller than the optional expanded layout
++
++Before the reference endpoint works, prefer a pinned upstream checkout or submodule, a short manifest, a narrow overlay/patch directory, a launch script, a smoke-test script, and logs/artifact paths. Follow an existing repository's conventions. Do not create every file shown below merely to match a diagram.
++
++After concrete repeated work justifies extraction, the following is a possible expanded layout, not a first-session deliverable:
+ 
+ ```text
+ rust-bootstrap/
+@@ -607,9 +662,11 @@
+ 
+ Keep third-party source trees and build outputs outside version control. Pin upstream commits/tarballs rather than committing hundreds of megabytes of vendored compiler sources into this project. Preserve attribution and applicable upstream licenses when copying recipes; the inspected dtolnay repository declares CC-BY-SA-4.0. [S05]
+ 
+-### 11.2 Proposed CLI
+-
+-These commands are an implementation contract for the new controller, not existing upstream commands:
++### 11.2 Optional CLI after reference reproduction
++
++The initial interface may simply expose upstream commands with correct logging and retention. The commands below are a possible convenience interface, not an implementation requirement before actual compilation.
++
++If a standalone controller becomes justified, these are candidate interfaces, not existing upstream commands or a mandatory initial contract:
+ 
+ ```sh
+ ./bootstrap doctor
+@@ -626,7 +683,7 @@
+ ./bootstrap export rust-1.99.1
+ ```
+ 
+-Initially, implement `doctor`, `run`, `status`, and `logs`, with one seed stage. Add the remaining operations when needed. Avoid dozens of partially implemented flags.
++Only after a demonstrated need for this controller, implement the smallest useful subset. An existing upstream invocation plus logs may remain sufficient. Avoid dozens of partially implemented flags.
+ 
+ ### 11.3 Stage state
+ 
+@@ -665,6 +722,10 @@
+ 
+ ## 12. Test plan
+ 
++Reuse upstream tests first: applicable mrustc local tests at the seed, then a curated set of the matching rustc tag's compiletest UI/run-make and library tests. Keep the small local workspace for integration coverage, not as the start of a new compiler-testing framework. Never use `--bless` or newly invented skips merely to hide failures. [R28]
++
++At later backend/ABI changes, consider ABI Cafe and Rustlantis with their documented limitations; keep those Rust-written helpers outside the initial seed dependencies. At clean replay, use diffoscope rather than writing an ELF/archive comparison tool. [R29–R31]
++
+ ### 12.1 Environment tests
+ 
+ Build and run C and C++ programs. Verify selected compiler and linker paths. Confirm the musl loader can execute produced binaries. Verify the selected LLVM artifact's tools run and its libraries can be loaded.
+@@ -714,7 +775,15 @@
+ 
+ Verify a warm no-op run. Verify that changing only README text does not rebuild LLVM. Verify that changing the predecessor/native environment invalidates affected consumers. Verify that failed-stage cleanup leaves earlier artifacts intact.
+ 
+-### 12.10 Same-version self-build and replay tests
++### 12.10 Promoted prefix and environment tests
++
++Run each promoted toolchain with its original build tree unavailable, in the declared runtime environment. Resolve symlinks and check loader/backend/native-library availability. Record how Cargo, rustdoc where needed, host procedural macros, and target libraries are found. Do not equate copying `bin/rustc` with installing a usable predecessor.
++
++Keep unrelated user Cargo configuration, rustup shims, `RUSTC_WORKSPACE_WRAPPER`, encoded Rust flags, global target/linker overrides, and profile tuning out of the canonical environment. An explicit diagnostic import is allowed; ambient discovery is not a successful handoff.
++
++Test produced-program linking modes independently of host compiler linkage. Require only the modes advertised by the selected profile, and retain the inputs needed for them.
++
++### 12.11 Same-version self-build and replay tests
+ 
+ A self-build must execute the compiler-generation steps rather than copy uplifted artifacts. Test its output functionally. A later replay must use its declared cache/import policy. These two checks answer different questions and should have separate reports.
+ 
+@@ -819,6 +888,8 @@
+ 
+ Use build traces to identify actual extension/dependency use. Prefer removing an entire unused library or tool stage to replacing a harmless attribute with complicated portable scaffolding. Keep a functioning baseline at every reduction.
+ 
++Use existing GCC-backend self-bootstrap work as a concrete alternative-backend reference, and consider an independently regenerated C snapshot only after its separate acceptance gates pass. Onramp/boot2 may inform a later smaller lower layer, but reaching a C toolchain alone does not provide the whole selected Rust build environment. [R09–R18, R22–R25]
++
+ ### 16.5 Finally pursue stronger semantic and ancestry arguments
+ 
+ A verified compiler component, translation checker, or DDC experiment needs a separate statement of assumptions and acceptance criteria. Ordinary self-hosting and deterministic rebuilds do not establish these properties. Do not advertise formal verification merely because formal-methods tooling is present in the repository.
+@@ -827,25 +898,25 @@
+ 
+ ## 17. First-session instructions for a coding agent
+ 
+-Read this document and inspect the current workspace. If a repository already exists, use its conventions and do not replace its architecture before understanding it.
+-
+-Then:
+-
+-1. Inspect the StageX musl recipe and the pinned mrustc 1.90 bootstrap path. Record concrete source revisions and the frozen destination.
+-2. Prepare a musl-native build environment with compatible borrowed C/C++/LLVM tools and persistent directories. Verify native C/C++ execution.
+-3. Add a minimal executable entry point that runs the real mrustc/minicargo build, with logs and ccache counters.
+-4. Actually compile those tools. Fix concrete failures using the known recipe. Preserve output.
+-5. Advance to the seed compiler/Cargo and native-sysroot normalization.
+-6. Attempt Rust 1.91.1 with the new predecessor toolchain. This is the first substantial bootstrap gate.
+-7. Add automation only around steps that have now been exercised, then continue the frozen ladder.
+-
+-Do not stop after generating a scaffold. Do not ask the user to choose among C compilers, cache topologies, or theoretical bootstrap approaches when the reference recipe already supplies a reasonable next action.
+-
+-If the execution environment lacks the required CPU architecture, memory, disk, or container capability, produce the working launch scripts and an exact, non-destructive host command. State which build steps were actually executed and which were not. Do not fabricate a green milestone.
++Read the audit summary and the existing repository before changing architecture. Then:
++
++1. Pin one StageX reference bundle and inspect its actual target/import behavior. Record native dependencies and whether the Rust leaf will execute locally.
++2. Prepare native musl prerequisites and verify C/C++/LLVM execution. Reuse upstream orchestration; add only a narrow launch/retention/logging overlay.
++3. Enable and measure the existing ccache paths without simultaneously changing compiler optimization or runtime policy.
++4. Actually compile mrustc/minicargo, then the seed and native normalization. Consult Gentoo/Guix for a concrete handoff failure before inventing machinery.
++5. Attempt the first native-Rust successor, retaining complete prefixes and their dependency roots.
++6. Finish the selected reference endpoint, then make only the adapter changes needed to extend to the frozen destination. Use current musl packaging as evidence for late-version issues.
++7. Test the final functional toolchain, same-version rebuild, and recovery behavior; only then pursue lower-ancestry reconstruction.
++
++Do not stop at a scaffold. Do not ask the user to choose among speculative compiler/cache architectures when the pinned recipe provides the next experiment.
++
++If the available execution environment lacks the required architecture, disk, memory, or container capability, leave exact non-destructive launch/resume commands and report which gates were not run. Never manufacture a green build result.
++
++The optional Rustic experiment is explicitly separate. It must not turn the first session into concurrent maintenance of two compiler infrastructures.
+ 
+ ## 18. Research ledger and source index
+ 
+-All sources below were inspected or retrieved during this research. Branch-based references are observations, not immutable build pins. The implementation must resolve commits and archive checksums before using them. URLs are given for the agent to inspect; no source archive or compiler output is bundled with this plan.
++S01–S24 are retained from the first research pass. Additional sources inspected during the completeness audit are R01–R31 in `RESEARCH_INDEX.md`. Branch-based references are observations, not immutable build pins. The implementation must resolve commits and archive checksums before using them. URLs are given for the agent to inspect; no source archive or compiler output is bundled with this plan.
+ 
+ ### Primary implementation sources
+ 
+@@ -966,3 +1037,47 @@
+ The first full project completion adds the Hex0-derived lower compiler closure and reruns the same Rust pipeline. The strongest later claim adds a clean replay with the remaining host assumptions stated accurately.
+ 
+ **Build the working chain. Preserve it. Measure it. Replace one assumption at a time.**
++
++
++## 20. Optional C-snapshot feasibility experiment
++
++This is a bounded research lane, not a prerequisite or replacement for the canonical independent mrustc route. Rustic publishes a generated-C archive and an associated compiler/backend workflow. See `AUDIT_AND_PRIOR_ART.md`, section 5, for the source-level limitations found during inspection. [R09–R13]
++
++### 20.1 Purpose and inputs
++
++Determine whether the inspected C archive can become a useful compiler predecessor using native tools, and what additional sysroot/Cargo/runtime inputs it needs. Use the exact inspected release/asset as an initial candidate; record the complete file inventory and native dependencies. Do not use a binary-toolchain archive while reporting a source-archive rebuild.
++
++A generated-C seed is allowed for this experiment. Its producer is still an assumption until regeneration is connected to the independent lineage. Label its artifacts separately from mrustc-derived outputs. Do not quietly import its compiler into the canonical chain.
++
++### 20.2 Acceptance sequence
++
++1. Rebuild the compiler from the selected C archive without requiring an installed Rust compiler merely to launch the process.
++2. Establish and document the matching sysroot/metadata and runtime closure; compile and run ordinary Rust programs.
++3. Demonstrate Cargo, build scripts, procedural macros, native FFI, and unwinding.
++4. Test a compiler-sized workload and the standalone native fallbacks, including recursion/stack pressure.
++5. Attempt a specified next-release handoff with the resulting compiler/Cargo/sysroot.
++6. Treat musl adaptation as a separate result from GNU/Linux success.
++7. Later regenerate the C snapshot through the accepted independent toolchain and compare its behavior/artifacts.
++
++Do not replace a failing native fallback with another unreviewed implementation simply to get a green hello-world. Prefer upstream native source or a narrowly justified existing fix, consistent with the project's acceptance of extensions.
++
++### 20.3 Resource and scope limits
++
++Run on separate resources or after the canonical early handoff so the experiment cannot starve the main build. End a session with the highest passed gate, exact blocker, and a recommendation to continue or park it. Do not port the whole backend to a new rustc tag as an unplanned side task.
++
++The published backend test percentage is not a proof of standalone archive completeness. `CC`-wrapper behavior, optimization requirements, native stubs, generated crate metadata, and Cargo are separate things to inspect and test.
++
++## 21. Evidence and remaining implementation gaps
++
++Keep these states distinct in progress reports:
++
++| State | Meaning |
++|---|---|
++| Recipe inspected | Its source/configuration was read |
++| Upstream result reported | An author or project describes a successful result |
++| Artifact published | A build output is available; its ancestry/test coverage still needs interpretation |
++| Locally rebuilt | Commands actually executed on the selected builder |
++| Handoff passed | Complete output drove the specified next compiler build |
++| Clean replay passed | A separately defined ancestry/cache boundary was reproduced |
++
++The actual musl reference run, final-release extension, cache effectiveness, standalone Rustic usability, and Hex0 closure remain build/test gates. More documentation cannot establish them. This plan is ready for those experiments; it is not a report that they already succeeded.
