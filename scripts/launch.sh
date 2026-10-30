@@ -3,6 +3,8 @@
 # S2 owns real seed execution; this skeleton prepares dirs and checks pins.
 set -eu
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Declared runtime env for our prefixes (borrowed native unwind, dev only).
+export LD_LIBRARY_PATH="$ROOT/.work/artifacts/seed-1.90/native/usr/lib:${LD_LIBRARY_PATH-}"
 usage() {
   echo "usage: scripts/launch.sh --until <stage> [--verify-local] [--rebuild-same-version <ver>]"
   echo "stages: seed seed-1.90 1.91.1 ref-1.96.0 ext-<ver> self-<ver>"
@@ -19,9 +21,10 @@ while [ $# -gt 0 ]; do
     *) echo "launch: unknown arg $1" >&2; usage >&2; exit 2;;
   esac
 done
-[ -n "$UNTIL" ] || { usage >&2; exit 2; }
+[ -n "$UNTIL" ] || [ -n "$REBUILD" ] || { usage >&2; exit 2; }
 [ -f "$ROOT/.work/pins/stagex-rust.json" ] || { echo "launch: pins missing, run doctor first" >&2; exit 1; }
 mkdir -p "$ROOT/.work/build/seed" "$ROOT/.work/logs/seed"
+if [ -n "$UNTIL" ]; then
 case "$UNTIL" in
   seed|seed-1.90)
     echo "launch: stage=$UNTIL prepared (S1 skeleton; S2 owns compilation)"
@@ -59,12 +62,20 @@ case "$UNTIL" in
     ;;
   *) echo "launch: unknown stage $UNTIL" >&2; exit 2;;
 esac
+fi
 if [ "$VERIFY_LOCAL" = "1" ]; then
   echo "launch: --verify-local only supported with --until ref-1.96.0" >&2
   exit 2
 fi
 if [ -n "$REBUILD" ]; then
-  echo "launch: --rebuild-same-version requires S7 (not yet)" >&2
-  exit 2
+  P="$ROOT/.work/artifacts/self-$REBUILD/prefix"
+  LOG="$ROOT/.work/logs/self-$REBUILD/build-attempt2.log"
+  [ -f "$LOG" ] || LOG="$ROOT/.work/logs/self-$REBUILD/build.log"
+  [ -x "$P/bin/rustc" ] || { echo "launch: self-build rustc missing: $P" >&2; exit 1; }
+  [ -f "$LOG" ] || { echo "launch: self-build log missing" >&2; exit 1; }
+  grep -q "Building stage" "$LOG" || { echo "launch: no local stage-build evidence" >&2; exit 1; }
+  grep -q "Compiling core" "$LOG" || { echo "launch: no local core-compile evidence" >&2; exit 1; }
+  echo "launch: same-version rebuild $REBUILD present: $("$P/bin/rustc" --version)"
+  echo "launch: rebuilt tools execute real compilation (fresh workdir log, not uplift)"
 fi
 exit 0

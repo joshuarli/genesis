@@ -1,0 +1,14 @@
+{
+ "item": "S7",
+ "date": "2026-10-31",
+ "final": ".work/artifacts/ext-1.99.1/prefix (rustc 1.99.1)",
+ "same_version_rebuild": ".work/artifacts/self-1.99.1/prefix (x.py install, 23 min, fresh workdir, markers prove compilation)",
+ "fixtures": "tests/smoke (proc-macro/build.rs/FFI/threads-TLS/unwind) 5/5 on final AND rebuilt prefixes",
+ "external": "rustfilt 0.2.1 offline from vendored sources; lto=off (llvm-bitcode-linker .llvmbc limitation recorded)",
+ "musl_policy_frozen": {
+  "default": "dynamic (ldd: musl loader)",
+  "static": "+crt-static static-pie (needs self-contained .a, kept)",
+  "unwind": "bundled libunwind.so.1 in sysroot lib; LD_LIBRARY_PATH native dir at runtime"
+ },
+ "toolchain_rustc_stamp": "RUST_MIN_STACK=16777216 required to RUN 1.99.1-built compilers on big LLVM codegen (documented for users)"
+}

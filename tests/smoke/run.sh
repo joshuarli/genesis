@@ -15,6 +15,8 @@ done
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 export PATH="$PREFIX/bin:$PATH"
 export CARGO_NET_OFFLINE=true
+# Declared runtime env (borrowed native unwind, dev only).
+export LD_LIBRARY_PATH="$ROOT/../../.work/artifacts/seed-1.90/native/usr/lib:${LD_LIBRARY_PATH-}"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH-}"
 pass=0
 run_case() {
