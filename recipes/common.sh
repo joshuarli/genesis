@@ -138,67 +138,67 @@ verify_sha256() {
 }
 
 download_source() {
-  key="$1"
-  dest="$2"
-  url="$(source_field "$key" url)"
-  expected="$(source_field "$key" sha256)"
-  if [ -f "$dest" ]; then
-    verify_sha256 "$dest" "$expected"
+  _ds_key="$1"
+  _ds_dest="$2"
+  _ds_url="$(source_field "$_ds_key" url)"
+  _ds_expected="$(source_field "$_ds_key" sha256)"
+  if [ -f "$_ds_dest" ]; then
+    verify_sha256 "$_ds_dest" "$_ds_expected"
     return 0
   fi
-  mkdir -p "$(dirname "$dest")"
-  tmp="$dest.part"
-  rm -f "$tmp"
-  note "download $url"
-  curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 -o "$tmp" "$url" || die "download failed: $url"
-  verify_sha256 "$tmp" "$expected"
-  mv "$tmp" "$dest"
+  mkdir -p "$(dirname "$_ds_dest")"
+  _ds_tmp="$_ds_dest.part"
+  rm -f "$_ds_tmp"
+  note "download $_ds_url"
+  curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 -o "$_ds_tmp" "$_ds_url" || die "download failed: $_ds_url"
+  verify_sha256 "$_ds_tmp" "$_ds_expected"
+  mv "$_ds_tmp" "$_ds_dest"
 }
 
 download_native_group() {
-  group="$1"
-  dest="$2"
-  base="$(python3 "$SOURCES_PY" native "$group" base_url)"
-  mkdir -p "$dest"
-  python3 "$SOURCES_PY" native "$group" packages | while IFS="$(printf '\t')" read -r name version sha; do
-    file="$dest/$name-$version.apk"
-    if [ -f "$file" ]; then
-      verify_sha256 "$file" "$sha"
+  _dng_group="$1"
+  _dng_dest="$2"
+  _dng_base="$(python3 "$SOURCES_PY" native "$_dng_group" base_url)"
+  mkdir -p "$_dng_dest"
+  python3 "$SOURCES_PY" native "$_dng_group" packages | while IFS="$(printf '\t')" read -r _dng_name _dng_version _dng_sha; do
+    _dng_file="$_dng_dest/$_dng_name-$_dng_version.apk"
+    if [ -f "$_dng_file" ]; then
+      verify_sha256 "$_dng_file" "$_dng_sha"
     else
-      url="$base/$name-$version.apk"
-      note "download $url"
-      tmp="$file.part"
-      rm -f "$tmp"
-      curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 -o "$tmp" "$url" || die "download failed: $url"
-      verify_sha256 "$tmp" "$sha"
-      mv "$tmp" "$file"
+      _dng_url="$_dng_base/$_dng_name-$_dng_version.apk"
+      note "download $_dng_url"
+      _dng_tmp="$_dng_file.part"
+      rm -f "$_dng_tmp"
+      curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 -o "$_dng_tmp" "$_dng_url" || die "download failed: $_dng_url"
+      verify_sha256 "$_dng_tmp" "$_dng_sha"
+      mv "$_dng_tmp" "$_dng_file"
     fi
   done
 }
 
 extract_native_group() {
-  group="$1"
-  dest="$2"
-  dl="$DOWNLOADS/native/$group"
-  download_native_group "$group" "$dl"
-  mkdir -p "$dest"
-  python3 "$SOURCES_PY" native "$group" packages | while IFS="$(printf '\t')" read -r name version sha; do
-    file="$dl/$name-$version.apk"
-    note "extract $name-$version"
-    tar -xzf "$file" -C "$dest"
+  _eng_group="$1"
+  _eng_dest="$2"
+  _eng_dl="$DOWNLOADS/native/$_eng_group"
+  download_native_group "$_eng_group" "$_eng_dl"
+  mkdir -p "$_eng_dest"
+  python3 "$SOURCES_PY" native "$_eng_group" packages | while IFS="$(printf '\t')" read -r _eng_name _eng_version _eng_sha; do
+    _eng_file="$_eng_dl/$_eng_name-$_eng_version.apk"
+    note "extract $_eng_name-$_eng_version"
+    tar -xzf "$_eng_file" -C "$_eng_dest"
   done
 }
 
 extract_archive() {
-  archive="$1"
-  dest="$2"
-  marker="$3"
-  if [ -e "$marker" ]; then
+  _ea_archive="$1"
+  _ea_dest="$2"
+  _ea_marker="$3"
+  if [ -e "$_ea_marker" ]; then
     return 0
   fi
-  mkdir -p "$dest"
-  note "extract $(basename "$archive")"
-  tar -xzf "$archive" -C "$dest"
+  mkdir -p "$_ea_dest"
+  note "extract $(basename "$_ea_archive")"
+  tar -xzf "$_ea_archive" -C "$_ea_dest"
 }
 
 apply_patch() {
