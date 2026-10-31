@@ -59,8 +59,12 @@ def main(argv):
                 return
         fail("sources: unknown release stage: " + argv[2])
     elif cmd == "list":
-        for stage in ["seed", "seed-1.90"] + [r["stage"] for r in DATA["release"]]:
+        for stage in ["seed", "seed-1.90"] + [r["stage"] for r in DATA["release"] if r.get("lineage") != "stagex"]:
             print(stage)
+    elif cmd == "lower-releases":
+        for release in DATA["release"]:
+            if release.get("lineage") == "stagex":
+                print(release["stage"])
     else:
         fail("sources: unknown command: " + cmd)
 

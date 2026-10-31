@@ -23,8 +23,14 @@ LLVM_MODE="$(release_field "$STAGE" llvm)"
 TOOLS="$(release_field "$STAGE" tools)"
 PATCH="$(release_field "$STAGE" patch)"
 ARTIFACT="$(release_field "$STAGE" artifact)"
+LINEAGE="$(release_field "$STAGE" lineage)"
 B="$BUILDS/$ARTIFACT"
 PREFIX="$ARTIFACTS/$ARTIFACT/prefix"
+
+if [ "$LINEAGE" = "stagex" ] && [ "${GENESIS_LOWER_BUILD:-0}" != "1" ]; then
+  die "stage $STAGE belongs to the StageX lower lineage; run recipes/lower-build.sh"
+fi
+[ "$MODE" != "external" ] || die "stage $STAGE is an extracted external artifact, not a build target"
 
 require_stage "$PREDECESSOR_STAGE"
 PRED="$(stage_prefix "$PREDECESSOR_STAGE")"

@@ -51,6 +51,10 @@ all_stages() {
   python3 "$SOURCES_PY" list
 }
 
+lower_stages() {
+  python3 "$SOURCES_PY" lower-releases
+}
+
 stage_exists() {
   python3 "$SOURCES_PY" release "$1" stage >/dev/null 2>&1 || [ "$1" = "seed" ] || [ "$1" = "seed-1.90" ]
 }
@@ -80,7 +84,7 @@ stage_version() {
   case "$1" in
     seed) echo "mrustc-0.12.0" ;;
     seed-1.90) echo "1.90.0" ;;
-    *) release_field "$1" stage | sed -e 's/^ext-//' -e 's/^ref-//' -e 's/^self-//' ;;
+    *) release_field "$1" stage | sed -e 's/^ext-//' -e 's/^ref-//' -e 's/^self-//' -e 's/^stagex-//' ;;
   esac
 }
 
@@ -187,6 +191,32 @@ extract_native_group() {
     note "extract $_eng_name-$_eng_version"
     tar -xzf "$_eng_file" -C "$_eng_dest"
   done
+}
+
+stagex_source_dir() {
+  echo "${GENESIS_STAGEX_SRC:-$WORK/lower/stagex-src}"
+}
+
+ensure_stagex_source() {
+  _es_src="$(stagex_source_dir)"
+  if [ -f "$_es_src/packages/core/rust/Containerfile" ]; then
+    return 0
+  fi
+  _es_archive="$DOWNLOADS/$(manifest_field stagex.source_file)"
+  _es_expected="$(manifest_field stagex.source_sha256)"
+  if [ -f "$_es_archive" ]; then
+    verify_sha256 "$_es_archive" "$_es_expected"
+  else
+    _es_url="$(manifest_field stagex.source_url)"
+    note "download $_es_url"
+    _es_tmp="$_es_archive.part"
+    rm -f "$_es_tmp"
+    curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 -o "$_es_tmp" "$_es_url" || die "download failed: $_es_url"
+    verify_sha256 "$_es_tmp" "$_es_expected"
+    mv "$_es_tmp" "$_es_archive"
+  fi
+  mkdir -p "$_es_src"
+  tar -xzf "$_es_archive" -C "$_es_src" --strip-components=1
 }
 
 extract_archive() {

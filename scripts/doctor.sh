@@ -8,7 +8,7 @@ fail() { echo "doctor FAIL: $*" >&2; exit 1; }
 info() { echo "doctor: $*"; }
 START="$(date +%s)"
 
-for tool in cc c++ clang python3 make tar sha256sum curl ar readelf; do
+for tool in cc c++ clang python3 make tar sha256sum curl ar readelf git; do
   command -v "$tool" >/dev/null 2>&1 || fail "$tool not found"
 done
 command -v ccache >/dev/null 2>&1 || fail "ccache not found (declared build environment)"

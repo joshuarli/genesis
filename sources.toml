@@ -3,7 +3,7 @@ target = "x86_64-unknown-linux-musl"
 reference_endpoint = "1.96.0"
 
 [host]
-required = ["cc", "c++", "clang", "python3", "make", "tar", "sha256sum", "curl", "ccache", "mold", "ar", "readelf"]
+required = ["cc", "c++", "clang", "python3", "make", "tar", "sha256sum", "curl", "ccache", "mold", "ar", "readelf", "git"]
 musl_dev = true
 
 [stagex]
@@ -242,3 +242,41 @@ mode = "final"
 llvm = "23"
 tools = "cargo,clippy,rustfmt,rust-demangler,src"
 same_version = true
+
+[[release]]
+stage = "stagex-1.96.0"
+artifact = "stagex-1.96.0"
+source = "rust1_96_0"
+mode = "external"
+llvm = "system"
+lineage = "stagex"
+
+[[release]]
+stage = "stagex-1.97.1"
+artifact = "stagex-1.97.1"
+predecessor = "stagex-1.96.0"
+source = "rust1_97_1"
+mode = "intermediate"
+llvm = "system"
+tools = "cargo"
+lineage = "stagex"
+
+[[release]]
+stage = "stagex-1.98.1"
+artifact = "stagex-1.98.1"
+predecessor = "stagex-1.97.1"
+source = "rust1_98_1"
+mode = "intermediate"
+llvm = "system"
+tools = "cargo"
+lineage = "stagex"
+
+[[release]]
+stage = "stagex-1.99.1"
+artifact = "stagex-1.99.1"
+predecessor = "stagex-1.98.1"
+source = "rust1_99_1"
+mode = "final"
+llvm = "system"
+tools = "cargo,clippy,rustfmt,rust-demangler,src"
+lineage = "stagex"
