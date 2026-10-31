@@ -218,7 +218,7 @@ artifact = "ext-1.98.1"
 predecessor = "ext-1.97.1"
 source = "rust1_98_1"
 mode = "intermediate"
-llvm = "23"
+llvm = "21"
 tools = "cargo"
 
 [[release]]
