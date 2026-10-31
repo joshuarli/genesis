@@ -55,11 +55,12 @@ artifact trees during the relocation test.
 recipes/replay.sh --work-dir .work/replay-fresh
 ```
 
-The 2026-10-31 fresh-checkout run rebuilt mrustc, the seed, every rung, and a
-same-version 1.99.1 compiler in 1h15m of actual build time, then passed 7/7
-smoke cases (including static PIE), the external rustfilt build, and relocation
-with the build/artifact/download trees hidden. A subsequent forced mrustc C++
-stage rebuild scored 128/129 ccache hits. Details:
+The 2026-10-31 fresh-checkout run built mrustc, the seed, every rung, and a
+same-version 1.99.1 compiler in an empty work directory; interrupted stages
+resumed without rebuilding earlier toolchains. It then passed 7/7 smoke cases
+(including static PIE), the external rustfilt build, and relocation with the
+build/artifact/download trees hidden. A subsequent forced mrustc C++ stage
+rebuild scored 128/129 ccache hits. Details:
 `records/reports/replay-fresh.md`.
 
 The same result with the launcher:
