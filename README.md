@@ -25,7 +25,7 @@ installed toolchains.
 ./scripts/launch.sh --status
 ./scripts/launch.sh --until 1.99.1
 ./scripts/launch.sh --verify 1.99.1
-./tests/smoke/run.sh --prefix .work/artifacts/ext-1.99.1/prefix
+./tests/smoke/run.sh --prefix .work/artifacts/ext-1.99.1/prefix --static
 ./tests/external/run.sh --prefix .work/artifacts/ext-1.99.1/prefix
 ```
 
