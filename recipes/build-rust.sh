@@ -30,9 +30,27 @@ require_stage "$PREDECESSOR_STAGE"
 PRED="$(stage_prefix "$PREDECESSOR_STAGE")"
 [ -x "$PRED/bin/rustc" ] || die "predecessor rustc missing: $PRED"
 
+if [ "$PREDECESSOR_STAGE" = "seed-1.90" ]; then
+  SHIM="$ARTIFACTS/seed-1.90/tls-shim/tlskeys.so"
+  [ -f "$SHIM" ] || die "seed TLS shim missing: $SHIM"
+  export LD_PRELOAD="$SHIM${LD_PRELOAD:+:$LD_PRELOAD}"
+fi
+
 clear_rust_environment
 setup_ccache "${GENESIS_CCACHE_NAMESPACE:-dev}" || true
 use_native_unwind_runtime
+case "$LLVM_MODE" in
+  21)
+    if [ ! -x "$(llvm21_root)/bin/llvm-config" ]; then
+      extract_native_group llvm21 "$ARTIFACTS/seed-1.90/llvm21"
+    fi
+    ;;
+  23)
+    if [ ! -x "$(llvm23_root)/bin/llvm-config" ]; then
+      extract_native_group llvm23 "$ARTIFACTS/ext-1.99.1/llvm23"
+    fi
+    ;;
+esac
 use_llvm "$LLVM_MODE"
 
 ARCHIVE="$DOWNLOADS/$(source_field "$SOURCE_KEY" file)"

@@ -86,6 +86,10 @@ make -C run_rustc PARLEVEL="$PARLEVEL"
 INSTALL="$A/install"
 mkdir -p "$INSTALL"
 cp -R run_rustc/output/prefix/. "$INSTALL/"
+if [ -L "$INSTALL/lib/rustlib/$TARGET/lib/self-contained" ]; then
+  rm -f "$INSTALL/lib/rustlib/$TARGET/lib/self-contained"
+fi
+install_prefix_runtime "$INSTALL"
 cat > "$INSTALL/bin/rustc" <<'EOF'
 #!/bin/sh
 d=$(dirname "$0")
