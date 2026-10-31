@@ -93,6 +93,9 @@ echo "source: $ROOT"
 echo "work: $WORK"
 echo "target stage: $TARGET_STAGE"
 git -C "$ROOT" rev-parse HEAD 2>/dev/null || true
+if [ -n "$(git -C "$ROOT" status --porcelain 2>/dev/null)" ]; then
+  echo "warning: source tree has local changes"
+fi
 uname -a
 nproc
 free -g | head -n2
@@ -138,8 +141,10 @@ restore_hidden
 trap - EXIT INT TERM
 
 echo "=== ccache ==="
+CCACHE_STATS=""
 if [ "$NO_CCACHE" = "0" ] && command -v ccache >/dev/null 2>&1; then
-  ccache -s || true
+  CCACHE_STATS="$(ccache -s 2>&1 || true)"
+  printf '%s\n' "$CCACHE_STATS"
 fi
 
 END="$(date +%s)"
@@ -176,6 +181,13 @@ ELAPSED=$((END - START))
   echo "- external rustfilt 0.2.1: pass"
   echo "- same-version rebuild: $([ "$TARGET_STAGE" = "self-1.99.1" ] && echo pass || echo not requested)"
   echo "- relocation: pass (build/artifacts/downloads hidden)"
+  echo
+  echo "## ccache"
+  if [ -n "$CCACHE_STATS" ]; then
+    printf '%s\n' "$CCACHE_STATS" | sed 's/^/    /'
+  else
+    echo "- disabled or unavailable"
+  fi
   echo
   echo "## Runtime contract"
   echo "- RUST_MIN_STACK=16777216 is used for LLVM-23 compiler builds (1.99.1 and self-build)."

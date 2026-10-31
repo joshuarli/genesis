@@ -17,9 +17,9 @@ fi
 
 cd "$SRC"
 if [ ! -f "$SRC/.genesis-patched" ]; then
-  apply_patch "$ROOT/patches/mrustc/patch.patch"
-  apply_patch "$ROOT/patches/mrustc/aea331a4f60535eb6c146b82c50255334e4abf3a.patch"
-  apply_patch "$ROOT/patches/mrustc/mrustc-undefined-behavior.patch"
+  apply_patch "$ROOT/$(manifest_field patches.mrustc.patch)"
+  apply_patch "$ROOT/$(manifest_field patches.mrustc.upstream_fix)"
+  apply_patch "$ROOT/$(manifest_field patches.mrustc.undefined_behavior)"
   if ! grep -q "inline static const unsigned PTR_BASE" src/hir/encoded_literal.hpp; then
     sed -i s/"static const unsigned PTR_BASE"/"inline static const unsigned PTR_BASE"/ src/hir/encoded_literal.hpp
   fi

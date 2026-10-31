@@ -34,6 +34,10 @@ source_field() {
   python3 "$SOURCES_PY" source "$1" "$2"
 }
 
+manifest_field() {
+  python3 "$SOURCES_PY" field "$1"
+}
+
 release_field() {
   python3 "$SOURCES_PY" release "$1" "$2"
 }
