@@ -30,6 +30,8 @@ SYSROOT_LIB="$SYSROOT/lib/rustlib/$HOST/lib"
 [ -d "$SYSROOT_LIB" ] || { echo "missing sysroot lib: $SYSROOT_LIB" >&2; exit 1; }
 WORK="${GENESIS_WORK:-$ROOT/.work}"
 BASE="${WORK_DIR:-$WORK/tests/external}"
+mkdir -p "$BASE"
+BASE="$(cd "$BASE" && pwd)"
 PKG="$BASE/rustfilt-0.2.1"
 CARGO_HOME_DIR="$BASE/cargo-home"
 mkdir -p "$PKG" "$CARGO_HOME_DIR"

@@ -31,7 +31,7 @@ done
 if [ -n "$WORK_ARG" ]; then
   case "$WORK_ARG" in
     /*) WORK="$WORK_ARG" ;;
-    *) WORK="$(cd "$(dirname "$WORK_ARG")" 2>/dev/null && pwd)/$(basename "$WORK_ARG")" ;;
+    *) _wd="$(dirname "$WORK_ARG")"; mkdir -p "$_wd"; WORK="$(cd "$_wd" && pwd)/$(basename "$WORK_ARG")" ;;
   esac
 else
   WORK="${GENESIS_WORK:-$ROOT/.work/replay-$(date -u +%Y%m%dT%H%M%SZ)}"
@@ -107,6 +107,9 @@ echo "=== extension branch and destination ==="
 "$ROOT/scripts/launch.sh" --until "$TARGET_STAGE"
 
 FINAL_STAGE="ext-1.99.1"
+if [ "$TARGET_STAGE" != "self-1.99.1" ]; then
+  FINAL_STAGE="$TARGET_STAGE"
+fi
 FINAL_PREFIX="$(stage_prefix "$FINAL_STAGE")"
 verify_stage "$FINAL_STAGE" >/dev/null || die "final toolchain verification failed"
 
