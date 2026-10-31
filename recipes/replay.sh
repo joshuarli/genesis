@@ -114,7 +114,7 @@ FINAL_PREFIX="$(stage_prefix "$FINAL_STAGE")"
 verify_stage "$FINAL_STAGE" >/dev/null || die "final toolchain verification failed"
 
 echo "=== functional tests ==="
-"$ROOT/tests/smoke/run.sh" --prefix "$FINAL_PREFIX" --work-dir "$WORK/tests/smoke-final"
+"$ROOT/tests/smoke/run.sh" --prefix "$FINAL_PREFIX" --work-dir "$WORK/tests/smoke-final" --static
 "$ROOT/tests/external/run.sh" --prefix "$FINAL_PREFIX" --work-dir "$WORK/tests/external-final"
 
 echo "=== relocated toolchain test ==="
@@ -139,7 +139,7 @@ trap 'restore_hidden' EXIT INT TERM
 hide_dir "$WORK/build"
 hide_dir "$WORK/artifacts"
 hide_dir "$WORK/downloads"
-"$ROOT/tests/smoke/run.sh" --prefix "$REL/prefix" --work-dir "$WORK/tests/relocated"
+"$ROOT/tests/smoke/run.sh" --prefix "$REL/prefix" --work-dir "$WORK/tests/relocated" --static
 restore_hidden
 trap - EXIT INT TERM
 
@@ -166,7 +166,13 @@ ELAPSED=$((END - START))
   echo "## Toolchain versions"
   for stage in $(all_stages); do
     prefix="$(stage_prefix "$stage")"
-    if [ -x "$prefix/bin/rustc" ]; then
+    if [ "$stage" = "seed" ]; then
+      if [ -x "$prefix/bin/mrustc" ]; then
+        printf -- '- %s: %s\n' "$stage" "$("$prefix/bin/mrustc" --version 2>/dev/null | head -n1)"
+      else
+        printf -- '- %s: not built\n' "$stage"
+      fi
+    elif [ -x "$prefix/bin/rustc" ]; then
       printf -- '- %s: %s / %s\n' "$stage" "$("$prefix/bin/rustc" --version 2>/dev/null | head -n1)" "$("$prefix/bin/cargo" --version 2>/dev/null | head -n1)"
     else
       printf -- '- %s: not built\n' "$stage"
@@ -180,7 +186,7 @@ ELAPSED=$((END - START))
   echo "- no ambient rustc/cargo was visible on PATH"
   echo
   echo "## Results"
-  echo "- smoke suite: pass (final and relocated prefixes)"
+  echo "- smoke suite: pass, including static-pie output inspection (final and relocated prefixes)"
   echo "- external rustfilt 0.2.1: pass"
   echo "- same-version rebuild: $([ "$TARGET_STAGE" = "self-1.99.1" ] && echo pass || echo not requested)"
   echo "- relocation: pass (build/artifacts/downloads hidden)"
