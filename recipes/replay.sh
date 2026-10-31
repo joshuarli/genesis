@@ -53,6 +53,8 @@ fi
 if [ "$NO_CCACHE" = "1" ]; then
   export CCACHE_DISABLE=1
 else
+  unset CCACHE_DISABLE
+  export CCACHE_DIR="$WORK/cache/ccache-replay"
   setup_ccache replay || true
 fi
 

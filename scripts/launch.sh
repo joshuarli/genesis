@@ -167,6 +167,9 @@ fi
 
 [ -n "$UNTIL" ] || { usage >&2; exit 2; }
 stage="$(canonical_stage "$UNTIL")" || die "unknown or unsupported stage: $UNTIL"
+if [ "$FORCE" = "1" ] && [ -z "$FORCE_STAGE" ]; then
+  FORCE_STAGE="$stage"
+fi
 note "work dir: $WORK"
 note "target: $UNTIL (stage $stage)"
 build_until "$stage"
