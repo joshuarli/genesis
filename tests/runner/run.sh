@@ -72,6 +72,8 @@ else
 fi
 
 expect_fail "missing-prefix" "$ROOT/tests/smoke/run.sh" --prefix "$TMP/not-there"
+expect_fail "external-vendor-failure" env GENESIS_WORK="$TMP/ext-work" "$ROOT/tests/external/run.sh" --prefix "$FAKE" --work-dir "$TMP/ext-work"
+expect_contains "external-vendor-failure-status" "$TMP/external-vendor-failure.log" "cargo vendor failed"
 
 EMPTY_WORK="$TMP/empty-work"
 mkdir -p "$EMPTY_WORK"
