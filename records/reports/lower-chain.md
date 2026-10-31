@@ -20,8 +20,9 @@ rebuilt lib on the loader path (DT_NEEDED satisfied by rebuilt artifact — iden
 Cause: rebuilding the complete lower toolchain (Hex0 seed through C++ compiler,
 musl, and all native deps) is a multi-day, ~500 GB full-distro reproduction;
 StageX documents that scope and this campaign declares it out of scope for local
-completion. Retry condition: dedicated builder + storage, or a narrowed closure
-definition (e.g. musl+libunwind+compiler-rt+C++ only) with days of compute.
+completion. Retry condition: measure the narrow StageX dependency closure for the Rust
+and native-toolchain path (not the full-distribution 500 GB reproduction),
+then rebuild compiler-producing consumers under it.
 ## Mechanism status
 `recipes/lower-chain.sh inventory` lists the recorded path; it does not verify
 ancestry. `verify-lower-closure` fails because the Rust compiler chain was not
