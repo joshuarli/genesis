@@ -8,4 +8,5 @@ These are document-integrity checks, not build or compiler tests.
 - Original input documents were preserved.
 - Revised roadmap includes reference reproduction and extension as separate gates.
 - Updated roadmap and coding-agent prompt each have a unified diff against revision 1.
-- No compiler builds, cache benchmarks, or runtime tests were executed.
+- The revision-2 research bundle contained no compiler builds; current build
+  and replay status is recorded in `CAMPAIGN.md`.
