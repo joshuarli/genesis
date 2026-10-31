@@ -32,11 +32,11 @@ run_case "proc-macro-derive" "$ROOT/pm-user" "pm-user" "pm ok"
 run_case "build-rs" "$ROOT/buildrs" "buildrs" "buildrs ok"
 run_case "ffi-cc" "$ROOT/ffivec" "ffivec" "ffi ok"
 echo "--- threads-tls ---"
-$PREFIX/bin/rustc -O "$ROOT/../../.work/tmp/smoke-ext-1.99.1/threads.rs" -o /tmp/opencode/s7-threads
+$PREFIX/bin/rustc -O "$ROOT/threads.rs" -o /tmp/opencode/s7-threads
 /tmp/opencode/s7-threads | grep -q "threads ok" || exit 1
 pass=$((pass + 1))
 echo "--- unwind ---"
-$PREFIX/bin/rustc -O "$ROOT/../../.work/tmp/smoke-ext-1.99.1/unwind.rs" -o /tmp/opencode/s7-unwind
+$PREFIX/bin/rustc -O "$ROOT/unwind.rs" -o /tmp/opencode/s7-unwind
 /tmp/opencode/s7-unwind | grep -q "unwind ok" || exit 1
 pass=$((pass + 1))
 echo "SMOKE_SUITE_OK cases=$pass"
