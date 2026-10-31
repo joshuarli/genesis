@@ -7,14 +7,16 @@ PREFIX=""
 WORK_DIR=""
 ONLY=""
 KEEP=0
+STATIC=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --prefix) PREFIX="${2:-}"; shift 2 ;;
     --work-dir) WORK_DIR="${2:-}"; shift 2 ;;
     --only) ONLY="${2:-}"; shift 2 ;;
     --keep) KEEP=1; shift ;;
+    --static) STATIC=1; shift ;;
     -h|--help)
-      echo "usage: tests/smoke/run.sh --prefix <toolchain-prefix> [--work-dir DIR] [--only case,...] [--keep]"
+      echo "usage: tests/smoke/run.sh --prefix <toolchain-prefix> [--work-dir DIR] [--only case,...] [--keep] [--static]"
       exit 0
       ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
@@ -130,5 +132,31 @@ run_case ffi-cc "$HERE/ffivec" ffivec "ffi ok"
 run_rustc_case threads-tls "$HERE/threads.rs" "threads ok"
 run_rustc_case unwind "$HERE/unwind.rs" "unwind ok"
 run_rustc_case hello "$HERE/hello.rs" "hello"
+
+if [ "$STATIC" = "1" ]; then
+  echo "--- static-pie ---"
+  out_bin="$TMP_ROOT/static-pie"
+  log="$TMP_ROOT/static-pie-rustc.log"
+  if "$PREFIX/bin/rustc" -O -C target-feature=+crt-static "$HERE/static.rs" -o "$out_bin" >"$log" 2>&1; then
+    tail -n 2 "$log"
+  else
+    rc=$?
+    echo "FAIL: static-pie compile failed (exit $rc)" >&2
+    cat "$log" >&2
+    exit "$rc"
+  fi
+  readelf -l "$out_bin" >"$TMP_ROOT/static-pie-readelf.txt"
+  if grep -q "INTERP" "$TMP_ROOT/static-pie-readelf.txt"; then
+    fail "static-pie: produced an interpreter-dependent binary"
+  fi
+  readelf -d "$out_bin" >"$TMP_ROOT/static-pie-dynamic.txt" 2>&1 || true
+  if grep -q "NEEDED" "$TMP_ROOT/static-pie-dynamic.txt"; then
+    fail "static-pie: produced a binary with dynamic NEEDED entries"
+  fi
+  out="$("$out_bin")" || fail "static-pie: executable failed"
+  echo "$out"
+  echo "$out" | grep -q "static ok" || fail "static-pie: missing output"
+  pass=$((pass + 1))
+fi
 
 echo "SMOKE_SUITE_OK cases=$pass"
