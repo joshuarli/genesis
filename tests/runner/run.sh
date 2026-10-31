@@ -110,6 +110,14 @@ expect_fail "resume-interrupted-stage" env GENESIS_WORK="$RESUME" "$ROOT/scripts
 if [ -x "$MARK" ] && [ -f "$RESUME/build/seed/mrustc-0.12.0/keep.marker" ]; then
   ok "resume: earlier toolchain and partial source survived"
 fi
+env GENESIS_WORK="$RESUME" "$ROOT/scripts/launch.sh" --status >"$TMP/resume-status.log" 2>&1
+expect_contains "status-failed" "$TMP/resume-status.log" "seed"
+if grep -q "seed[[:space:]]*failed" "$TMP/resume-status.log"; then
+  ok "status: failed stage is distinct from not-attempted"
+else
+  bad "status: failed stage not reported as failed"
+  cat "$TMP/resume-status.log" >&2
+fi
 
 STATUS="$TMP/status"
 env GENESIS_WORK="$EMPTY_WORK" "$ROOT/scripts/launch.sh" --status >"$STATUS" 2>&1
