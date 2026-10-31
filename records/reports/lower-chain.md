@@ -1,4 +1,10 @@
 # S9 lower-closure report (2026-10-31, bounded scope)
+## Correction (2026-10-31)
+The old `--verify` command only checked that recorded paths existed; its
+`VERIFY_OK` did not establish a lower-chain closure. The current
+`recipes/lower-chain.sh verify-lower-closure` fails explicitly because no
+compiler-producing consumer was rebuilt under the new lineage. `inventory`
+only lists artifacts.
 ## Provenance of every lower input
 Borrowed (declared, S10-excluded): host cc/gcc 15.2.0, clang 23.1.3, musl libc/loader,
 apk LLVM 21.1.8 triple (llvm21/-dev/-static, test-utils), apk compiler-rt 23.1.4,
