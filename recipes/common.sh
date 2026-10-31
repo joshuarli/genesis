@@ -202,14 +202,14 @@ extract_archive() {
 
 apply_patch() {
   patch_file="$1"
-  shift
+  strip="${2:-1}"
   [ -f "$patch_file" ] || die "patch missing: $patch_file"
-  if patch -p1 -N -R --dry-run -s -i "$patch_file" >/dev/null 2>&1; then
+  if patch -p"$strip" -N -R --dry-run -s -i "$patch_file" >/dev/null 2>&1; then
     note "already applied: $(basename "$patch_file")"
     return 0
   fi
-  if patch -p1 -N --dry-run -s -i "$patch_file" >/dev/null 2>&1; then
-    patch -p1 -N -s -i "$patch_file"
+  if patch -p"$strip" -N --dry-run -s -i "$patch_file" >/dev/null 2>&1; then
+    patch -p"$strip" -N -s -i "$patch_file"
     note "applied: $(basename "$patch_file")"
     return 0
   fi

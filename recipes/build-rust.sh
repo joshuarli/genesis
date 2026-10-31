@@ -78,7 +78,7 @@ find ./src/bootstrap -type f | while IFS= read -r f; do
 done
 
 if [ -n "$PATCH" ]; then
-  apply_patch "$ROOT/$PATCH"
+  apply_patch "$ROOT/$PATCH" 2
 fi
 if [ "$MODE" = "final" ]; then
   note "musl default-link policy: dynamic"
