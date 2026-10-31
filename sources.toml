@@ -77,8 +77,8 @@ sha256 = "db56bbc64db491ceda6b78a2811a6d121c639338906fd944f720289cbd02245c"
 file = "rustc-1.99.1-src.tar.gz"
 
 [native.llvm21]
-base_url = "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64"
-repo = "alpine-v3.24-main"
+base_url = "https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64"
+repo = "alpine-edge-main"
 
 [native.llvm21.packages]
 llvm21 = { version = "21.1.8-r1", sha256 = "28e9f0b24c9ea43437292061c0dc6766a982e606a09074bbbc0fb8e4b06e5d20" }
