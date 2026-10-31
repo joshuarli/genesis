@@ -13,7 +13,7 @@ for tool in cc c++ clang python3 make tar sha256sum curl ar readelf; do
 done
 command -v ccache >/dev/null 2>&1 || fail "ccache not found (declared build environment)"
 command -v mold >/dev/null 2>&1 || fail "mold not found (declared build environment)"
-command -v docker >/dev/null 2>&1 || info "docker not found (only needed for the parked StageX lower-chain lane)"
+command -v docker >/dev/null 2>&1 || info "docker not found (needed for the StageX lower-chain lane)"
 
 [ -f "$SOURCES" ] || fail "input manifest missing: $SOURCES"
 python3 "$SOURCES_PY" releases >/dev/null || fail "cannot parse $SOURCES"

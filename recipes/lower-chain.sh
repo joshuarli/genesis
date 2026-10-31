@@ -9,6 +9,7 @@ usage() {
 usage: recipes/lower-chain.sh <command> [options]
 
 commands:
+  closure [target]     measure the StageX dependency closure (default core-rust)
   inventory            list chain artifacts and rebuilt lower components
   verify-rust-poc      run the functional tests against the final prefix
   replay-rust-chain    execute a fresh build (recipes/replay.sh)
@@ -20,6 +21,32 @@ EOF
 cmd="${1:-}"
 [ -n "$cmd" ] || { usage >&2; exit 2; }
 shift || true
+
+stagex_closure() {
+  target="${1:-core-rust}"
+  src="${GENESIS_STAGEX_SRC:-$WORK/lower/stagex-src}"
+  if [ ! -f "$src/packages/core/rust/Containerfile" ]; then
+    archive="$DOWNLOADS/$(manifest_field stagex.source_file)"
+    if [ ! -f "$archive" ]; then
+      url="$(manifest_field stagex.source_url)"
+      expected="$(manifest_field stagex.source_sha256)"
+      note "download $url"
+      tmp="$archive.part"
+      rm -f "$tmp"
+      curl -fL --retry 4 --retry-delay 2 --connect-timeout 20 -o "$tmp" "$url" || die "download failed: $url"
+      verify_sha256 "$tmp" "$expected"
+      mv "$tmp" "$archive"
+    else
+      verify_sha256 "$archive" "$(manifest_field stagex.source_sha256)"
+    fi
+    mkdir -p "$src"
+    tar -xzf "$archive" -C "$src" --strip-components=1
+  fi
+  python3 "$ROOT/recipes/stagex-closure.py" \
+    --stagex-src "$src" \
+    --target "$target" \
+    --commit "$(manifest_field stagex.commit)"
+}
 
 inventory() {
   echo "=== chain inventory ==="
@@ -68,6 +95,7 @@ verify_lower_closure() {
 }
 
 case "$cmd" in
+  closure) stagex_closure "${1:-core-rust}" ;;
   inventory) inventory ;;
   verify-rust-poc) verify_rust_poc ;;
   replay-rust-chain) exec "$ROOT/recipes/replay.sh" "$@" ;;

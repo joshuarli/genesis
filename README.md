@@ -74,12 +74,15 @@ GENESIS_WORK=/path/to/empty/work ./scripts/launch.sh --rebuild-same-version 1.99
 ## Lower chain
 
 ```sh
+recipes/lower-chain.sh closure
 recipes/lower-chain.sh inventory
 recipes/lower-chain.sh verify-rust-poc
 recipes/lower-chain.sh replay-rust-chain --work-dir .work/replay-fresh
 recipes/lower-chain.sh verify-lower-closure
 ```
 
+`closure` resolves the pinned StageX build graph for `core-rust`; the measured
+35-package narrow closure is in `records/reports/lower-closure.md`.
 `verify-lower-closure` fails until compiler-producing consumers are rebuilt
 under the rebuilt lower lineage. Rebuilding libunwind and relinking a smoke
 program does not change the ancestry of the Rust compiler.

@@ -14,6 +14,9 @@ image_digest = "sha256:def2df15b5bcc5271453fc940b06f5f1cbdec91b72c37855f6777c7e9
 containerfile = "records/stagex/Containerfile.stagex-rust"
 package_toml = "records/stagex/package.stagex-rust.toml"
 pin_record = "records/stagex/stagex-rust.json"
+source_url = "https://codeberg.org/stagex/stagex/archive/9bdf430d09ce2ba53932df0182faef00d4feecd1.tar.gz"
+source_file = "stagex-9bdf430d09ce2ba53932df0182faef00d4feecd1.tar.gz"
+source_sha256 = "9ffada571628a9e5820484e1cf6c4ee2ccc8d90f7b8c7dc26bffdb52c4e01f1c"
 
 
 [sources.mrustc]
