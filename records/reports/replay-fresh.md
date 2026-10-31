@@ -26,6 +26,8 @@ directory had its own `CARGO_HOME` and `CCACHE_DIR`.
 
 - Chain build: `db0c35d` (the final ladder fix, 1.98.1 on LLVM 21).
 - Final test/report rerun: `0168210` (static-pie included in replay tests).
+- Later commits fix post-build runtime/verification fallbacks; they do not alter
+  the toolchains built by this replay.
 - The work directory was reused across interruptions and resumed; each
   completed stage was verified before the next stage started.
 
