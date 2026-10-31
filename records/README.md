@@ -6,5 +6,5 @@ input hashes live in `recipes/`, `patches/`, `support/`, and `sources.toml`.
 
 - `handoffs/` — per-stage rustc/cargo/LLVM/native handoff records.
 - `stagex/` — pinned StageX Containerfile, package recipe, and pin record.
-- `reports/` — the partial S10 replay, the bounded lower-chain report, and the
-  Rustic X0 gate.
+- `reports/` — the full fresh replay report, the partial S10 replay, the bounded
+  lower-chain report, and the Rustic X0 gate.
