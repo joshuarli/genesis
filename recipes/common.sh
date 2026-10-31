@@ -355,6 +355,8 @@ verify_prefix() {
   sysroot="$(prefix_sysroot "$prefix")"
   [ -d "$sysroot/lib/rustlib/$TARGET/lib" ] || { echo "missing sysroot lib: $sysroot/lib/rustlib/$TARGET/lib"; return 1; }
   ls "$sysroot/lib/rustlib/$TARGET/lib"/libstd-*.rlib >/dev/null 2>&1 || { echo "missing libstd rlib"; return 1; }
+  [ -f "$sysroot/lib/rustlib/$TARGET/lib/self-contained/libc.a" ] || { echo "missing self-contained libc.a"; return 1; }
+  [ -f "$sysroot/lib/rustlib/$TARGET/lib/self-contained/libunwind.a" ] || { echo "missing self-contained libunwind.a"; return 1; }
   ls "$prefix/lib"/librustc_driver-*.so >/dev/null 2>&1 || { echo "missing rustc driver"; return 1; }
   "$prefix/bin/cargo" --version >/dev/null 2>&1 || { echo "cargo does not run"; return 1; }
   return 0
