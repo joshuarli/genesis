@@ -26,6 +26,11 @@ chmod +x "$RP/passthrough.sh"
 : > "$LOGD/passthrough.log"
 export CARGO_HOME="$RP/cargo-home"
 export CARGO_NET_OFFLINE=true
+export CC=cc CXX=c++
+export HOST_CC=cc HOST_CXX=c++
+# (RUSTC_WRAPPER=passthrough above neutralizes the config's kache wrapper;
+# mold -B from config rustflags resolves via $RP/bin symlink. kache itself
+# is deliberately unreachable on the scrubbed PATH.)
 export RUSTC_WRAPPER="$RP/passthrough.sh"
 export CCACHE_DISABLE=1
 export PATH="$RP/bin:/usr/bin:/bin"
@@ -94,7 +99,8 @@ for prefix in prefix-s prefix-2 prefix; do
   mkdir -p "$D"
   ln -sfn "$M/self-contained" "$D/self-contained"
 done
-sed -i s/'RUSTFLAGS="'/'RUSTFLAGS="-Ctarget-feature=-crt-static '/ "$M/run_rustc/Makefile"
+grep -q 'RUSTFLAGS="-Ctarget-feature=-crt-static ' "$M/run_rustc/Makefile" || \
+  sed -i s/'RUSTFLAGS="'/'RUSTFLAGS="-Ctarget-feature=-crt-static '/ "$M/run_rustc/Makefile"
 make -f minicargo.mk PARLEVEL=8 output/rustc >> "$LOGD/seed-rust.log" 2>&1
 make -f minicargo.mk PARLEVEL=8 output/cargo >> "$LOGD/seed-rust.log" 2>&1
 STD_ATTEMPTS=5
