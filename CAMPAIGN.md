@@ -2,7 +2,14 @@
 
 ## Status
 
-winding down
+paused 2026-10-31. Resume prompt: "Continue the Genesis campaign; finish the StageX lower closure."
+First command: `git switch lower/build-driver && ./recipes/lower-chain.sh build`
+
+Last accepted code revision: `1e903f9`; `master` is green (doctor, runner tests, closure resolver). The Rust 1.99.1 PoC and fresh-checkout replay remain accepted; S9 is incomplete.
+Closure measurement is committed: 35 packages and 308 source archives (`records/reports/lower-closure.md`). `bootstrap-stage0` is built; the local build is parked during `bootstrap-stage1` (GCC stage). No campaign process remains.
+Parked branch `lower/build-driver` (`d1636df`): lower build driver and real `verify-lower-closure` receipt. Not merged because the closure has never completed end-to-end.
+Retry condition: `make -C .work/lower/stagex-src bootstrap` and `make -C .work/lower/stagex-src core-rust` complete, then the driver builds `stagex-1.96.0` through `stagex-1.99.1` and the smoke plus external tests pass. The builder may need the local IPv4 fetch shim under `.work/lower/pyipv4`.
+Build state under `.work/lower/` is disposable; the pins and driver are committed. Next slice: finish that build, record the new identity, and accept S9 only when `recipes/lower-chain.sh verify-lower-closure` passes.
 
 ## Post-campaign repairs (2026-10-31)
 
@@ -23,7 +30,7 @@ lineage has no compiler-producing consumers.
 - Hard stops (park the item): irreversible/destructive act, outside-repo write, pushing, deleting a promoted prefix, or a loop with no checkable proof. Pushing is always forbidden.
 - Fix egregious breakage met on the way in its own commit when cheap and measurable: build removes >1 GB shared cache, log hides exit status, retry turns failure into success, wrapper re-enables a disabled codegen path. Otherwise record and leave.
 - Parity before optimization. No S8 tuning gates S2–S7 except a repair that unblocks delivery with an exit test.
-- One writer by default. Parallel only for pairs named in Sequence, in worktrees at `.work/wt/<lane>` per orchestrate lifecycle, never `/tmp`. Repo scratch is `.work/`.
+- One writer by default. Parallel only for pairs named in Sequence, in worktrees at `.work/wt/<lane>` per orchestrate lifecycle, never an OS temporary directory. Repo scratch is `.work/`.
 - Every commit is Conventional Commit with workstream scope; item ID in body. Code never cites this doc.
 
 ## Decisions
