@@ -149,11 +149,15 @@ if [ "$STATIC" = "1" ]; then
     cat "$log" >&2
     exit "$rc"
   fi
-  readelf -l "$out_bin" >"$TMP_ROOT/static-pie-readelf.txt"
+  if ! readelf -l "$out_bin" >"$TMP_ROOT/static-pie-readelf.txt" 2>&1; then
+    fail "static-pie: readelf -l failed"
+  fi
   if grep -q "INTERP" "$TMP_ROOT/static-pie-readelf.txt"; then
     fail "static-pie: produced an interpreter-dependent binary"
   fi
-  readelf -d "$out_bin" >"$TMP_ROOT/static-pie-dynamic.txt" 2>&1 || true
+  if ! readelf -d "$out_bin" >"$TMP_ROOT/static-pie-dynamic.txt" 2>&1; then
+    fail "static-pie: readelf -d failed"
+  fi
   if grep -q "NEEDED" "$TMP_ROOT/static-pie-dynamic.txt"; then
     fail "static-pie: produced a binary with dynamic NEEDED entries"
   fi
