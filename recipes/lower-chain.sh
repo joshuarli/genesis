@@ -41,7 +41,7 @@ verify_rust_poc() {
   PREFIX="$(stage_prefix "$FINAL_STAGE")"
   verify_stage "$FINAL_STAGE" >/dev/null 2>&1 || die "final toolchain is not built: $FINAL_STAGE"
   echo "=== Rust PoC: smoke ==="
-  "$ROOT/tests/smoke/run.sh" --prefix "$PREFIX"
+  "$ROOT/tests/smoke/run.sh" --prefix "$PREFIX" --static
   echo "=== Rust PoC: external CLI ==="
   "$ROOT/tests/external/run.sh" --prefix "$PREFIX"
   echo "RUST_POC_OK"
