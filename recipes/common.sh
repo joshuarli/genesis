@@ -130,11 +130,11 @@ sha256_of() {
 }
 
 verify_sha256() {
-  file="$1"
-  expected="$2"
-  [ -f "$file" ] || return 1
-  actual="$(sha256_of "$file")"
-  [ "$actual" = "$expected" ] || die "sha256 mismatch for $file: $actual != $expected"
+  _verify_file="$1"
+  _verify_expected="$2"
+  [ -f "$_verify_file" ] || return 1
+  _verify_actual="$(sha256_of "$_verify_file")"
+  [ "$_verify_actual" = "$_verify_expected" ] || die "sha256 mismatch for $_verify_file: $_verify_actual != $_verify_expected"
 }
 
 download_source() {
