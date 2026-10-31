@@ -47,7 +47,8 @@ then resumed without rebuilding earlier stages:
 
 These were genuine interruptions, not stage skips: earlier artifacts survived
 and `--status` reported the failed stage as failed. The final rerun of the
-replay script was a 6-second no-op plus tests because every stage verified.
+replay script skipped every completed stage and ran the tests, verifying the
+recorded artifacts rather than rebuilding them.
 
 ## Results
 

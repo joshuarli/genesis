@@ -50,3 +50,6 @@
 ## Runtime contract
 - RUST_MIN_STACK=16777216 is used for LLVM-23 compiler builds (1.99.1 and self-build).
 - Functional smoke and external tests run without it; compiler-sized LTO builds should keep it.
+
+> This raw report is the final verification rerun over completed stages; the
+> chain build and interruption history are in `replay-fresh.md`.
