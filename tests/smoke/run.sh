@@ -65,6 +65,10 @@ else
 fi
 export CARGO_TARGET_DIR="$TMP_ROOT/target"
 mkdir -p "$CARGO_TARGET_DIR"
+FIXTURES="$TMP_ROOT/fixtures"
+mkdir -p "$FIXTURES"
+cp -R "$HERE"/. "$FIXTURES/"
+rm -rf "$FIXTURES"/*/target
 
 selected() {
   [ -z "$ONLY" ] && return 0
@@ -126,18 +130,18 @@ run_rustc_case() {
   pass=$((pass + 1))
 }
 
-run_case proc-macro-derive "$HERE/pm-user" pm-user "pm ok"
-run_case build-rs "$HERE/buildrs" buildrs "buildrs ok"
-run_case ffi-cc "$HERE/ffivec" ffivec "ffi ok"
-run_rustc_case threads-tls "$HERE/threads.rs" "threads ok"
-run_rustc_case unwind "$HERE/unwind.rs" "unwind ok"
-run_rustc_case hello "$HERE/hello.rs" "hello"
+run_case proc-macro-derive "$FIXTURES/pm-user" pm-user "pm ok"
+run_case build-rs "$FIXTURES/buildrs" buildrs "buildrs ok"
+run_case ffi-cc "$FIXTURES/ffivec" ffivec "ffi ok"
+run_rustc_case threads-tls "$FIXTURES/threads.rs" "threads ok"
+run_rustc_case unwind "$FIXTURES/unwind.rs" "unwind ok"
+run_rustc_case hello "$FIXTURES/hello.rs" "hello"
 
 if [ "$STATIC" = "1" ]; then
   echo "--- static-pie ---"
   out_bin="$TMP_ROOT/static-pie"
   log="$TMP_ROOT/static-pie-rustc.log"
-  if "$PREFIX/bin/rustc" -O -C target-feature=+crt-static "$HERE/static.rs" -o "$out_bin" >"$log" 2>&1; then
+  if "$PREFIX/bin/rustc" -O -C target-feature=+crt-static "$FIXTURES/static.rs" -o "$out_bin" >"$log" 2>&1; then
     tail -n 2 "$log"
   else
     rc=$?

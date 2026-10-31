@@ -7,18 +7,16 @@ ROOT="$(cd "$HERE/.." && pwd)"
 WORK_ARG=""
 UNTIL=""
 NO_SELF=0
-KEEP_BUILD=0
 NO_CCACHE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --work-dir) WORK_ARG="${2:-}"; shift 2 ;;
     --until) UNTIL="${2:-}"; shift 2 ;;
     --no-self) NO_SELF=1; shift ;;
-    --keep-build) KEEP_BUILD=1; shift ;;
     --no-ccache) NO_CCACHE=1; shift ;;
     -h|--help)
       cat <<'EOF'
-usage: recipes/replay.sh [--work-dir DIR] [--until STAGE] [--no-self] [--keep-build] [--no-ccache]
+usage: recipes/replay.sh [--work-dir DIR] [--until STAGE] [--no-self] [--no-ccache]
 
 Builds mrustc, the 1.90 seed, the 1.96.0 reference endpoint, the 1.96.1
 extension branch, 1.99.1, and a same-version 1.99.1 rebuild in DIR.
