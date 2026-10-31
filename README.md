@@ -86,6 +86,7 @@ program does not change the ancestry of the Rust compiler.
 | `tests/external/` | pinned rustfilt 0.2.1 build from vendored crates |
 | `tests/runner/` | fast regression tests for the launcher and runners |
 | `tests/tls-shim/` | TLS-key shim regression test |
+| `records/` | historical handoffs, StageX pin, and campaign reports |
 | `.work/` | disposable downloads, builds, logs, caches, and prefixes |
 
 ## Declared build environment

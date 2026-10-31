@@ -6,6 +6,16 @@ reference_endpoint = "1.96.0"
 required = ["cc", "c++", "clang", "python3", "make", "tar", "sha256sum", "curl", "ccache", "mold"]
 musl_dev = true
 
+[stagex]
+commit = "9bdf430d09ce2ba53932df0182faef00d4feecd1"
+commit_date = "2026-06-14"
+image = "stagex/core-rust"
+image_digest = "sha256:def2df15b5bcc5271453fc940b06f5f1cbdec91b72c37855f6777c7e9acf9584"
+containerfile = "records/stagex/Containerfile.stagex-rust"
+package_toml = "records/stagex/package.stagex-rust.toml"
+pin_record = "records/stagex/stagex-rust.json"
+
+
 [sources.mrustc]
 url = "https://github.com/thepowersgang/mrustc/archive/refs/tags/v0.12.0.tar.gz"
 sha256 = "c1ba35f5fc5c4ca2952d9f5526e900dcb6632ea7fd4d71fa58029b3bb563ae56"
@@ -120,6 +130,9 @@ compat_1_92 = "patches/rust/1.92-compat-must-use.patch"
 "patches/rust/1.91-compat-must-use.patch" = "8fabdd4ae5550cd8f7d8f1602f61d981e896c93a7d04e69e8df7c13263c12596"
 "patches/rust/1.92-compat-must-use.patch" = "cd36421ec6ab345eaa13469d512b2ed99c47c0306170ceefd0f76b29cd7c56fc"
 "support/tlskeys.c" = "163d9d24a9e5953ee73c03bd665671184af949d402c00c8dc3bc3c63f84df13a"
+"records/stagex/Containerfile.stagex-rust" = "9082fe383c407e19e1464f74405f262f553711de1b2b9ca5e50b65be5ffb6be8"
+"records/stagex/package.stagex-rust.toml" = "1a9fbfe00e540d00a76aa02cab5754451d14e7682914481f0c43a4cfde279417"
+"records/stagex/stagex-rust.json" = "e76c43600ec5c451811228f4c241d7538a58597559859d97250bd1b7e5377a2f"
 
 
 [support]
