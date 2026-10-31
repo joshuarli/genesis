@@ -23,6 +23,6 @@ StageX documents that scope and this campaign declares it out of scope for local
 completion. Retry condition: dedicated builder + storage, or a narrowed closure
 definition (e.g. musl+libunwind+compiler-rt+C++ only) with days of compute.
 ## Mechanism status
-recipes/lower-chain.sh --verify passes (continuous path seed→final present;
-rebuilt-identity consumers rerun green). S10 partial replay proceeds on S2-S4
-with fresh output/cache namespace.
+`recipes/lower-chain.sh inventory` lists the recorded path; it does not verify
+ancestry. `verify-lower-closure` fails because the Rust compiler chain was not
+rebuilt under the rebuilt lower lineage. S10 partial replay covered S2-S4 only.

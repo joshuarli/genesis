@@ -48,6 +48,7 @@ export LD_LIBRARY_PATH="$SYSROOT_LIB${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 prepare_vendor() {
   if [ -d "$PKG/vendor" ] && [ "$PREPARE" = "0" ]; then
+    write_vendor_config
     return 0
   fi
   rm -rf "$PKG/vendor"
@@ -58,6 +59,11 @@ prepare_vendor() {
     cat "$BASE/vendor.log" >&2
     exit 1
   fi
+  write_vendor_config
+}
+
+write_vendor_config() {
+  mkdir -p "$PKG/.cargo"
   cat > "$PKG/.cargo/config.toml" <<'EOF'
 [source.crates-io]
 replace-with = "vendored-sources"
