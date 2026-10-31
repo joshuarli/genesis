@@ -163,6 +163,7 @@ if [ "$VERIFY_ONLY" = "1" ]; then
       fail=1
     fi
   done
+  note "artifact checks do not prove build ancestry"
   [ "$fail" = "0" ] || exit 1
   exit 0
 fi
