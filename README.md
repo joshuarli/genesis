@@ -102,7 +102,8 @@ program does not change the ancestry of the Rust compiler.
 ## Declared build environment
 
 Linux x86-64 with musl, `cc`/`c++` (GCC 15 works), clang 23, Python 3.11+,
-GNU make, tar, curl, ccache, mold, and the musl development CRT/archive files
+GNU make, tar, curl, ccache, mold, binutils (`ar`, `readelf`), and the musl
+development CRT/archive files
 (`/usr/lib/{rcrt1.o,crt1.o,Scrt1.o,crti.o,crtn.o,libc.a}`). Docker is only
 needed for the parked StageX lower-chain work. Network access is needed on the
 first run to fetch pinned sources and native packages.
