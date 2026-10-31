@@ -124,6 +124,26 @@ env GENESIS_WORK="$EMPTY_WORK" "$ROOT/scripts/launch.sh" --status >"$STATUS" 2>&
 expect_contains "status-not-attempted" "$STATUS" "not-attempted"
 expect_contains "status-stage" "$STATUS" "ext-1.99.1"
 
+STAGEX="$TMP/stagex"
+for pkg in bootstrap/stage0 core/filesystem core/busybox core/rust; do
+  mkdir -p "$STAGEX/packages/$pkg"
+  printf '[package]\nname = "%s"\n' "$(basename "$pkg")" > "$STAGEX/packages/$pkg/package.toml"
+done
+printf 'FROM scratch AS build\nCOPY --from=stagex/bootstrap-stage0 . /\n' > "$STAGEX/packages/core/filesystem/Containerfile"
+printf 'FROM scratch AS build\nCOPY --from=stagex/core-filesystem . /\n' > "$STAGEX/packages/core/busybox/Containerfile"
+printf 'FROM scratch AS build\nCOPY --from=stagex/core-busybox . /\n' > "$STAGEX/packages/core/rust/Containerfile"
+printf 'FROM scratch AS build\n' > "$STAGEX/packages/bootstrap/stage0/Containerfile"
+if python3 "$ROOT/recipes/stagex-closure.py" --stagex-src "$STAGEX" --target core-rust >"$TMP/closure.tsv" 2>&1; then
+  ok "stagex-closure: resolved"
+else
+  bad "stagex-closure: resolver failed"
+  cat "$TMP/closure.tsv" >&2
+fi
+expect_contains "stagex-closure-count" "$TMP/closure.tsv" "packages	4"
+expect_contains "stagex-closure-transitive" "$TMP/closure.tsv" "core-filesystem"
+rm "$STAGEX/packages/core/filesystem/package.toml"
+expect_fail "stagex-closure-missing" python3 "$ROOT/recipes/stagex-closure.py" --stagex-src "$STAGEX" --target core-rust
+
 if [ "$failures" -ne 0 ]; then
   echo "RUNNER_TESTS_FAILED failures=$failures" >&2
   exit 1
