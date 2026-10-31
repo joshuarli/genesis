@@ -62,7 +62,7 @@ export LLVM_CONFIG="$LLVM21/bin/llvm-config"
 export CCC_OVERRIDE_OPTIONS="+-g0"
 export CARGO_CFG_RUSTIX_NO_LINUX_RAW=1
 export LD_PRELOAD="$SHIM_DIR/tlskeys.so"
-export LD_LIBRARY_PATH="$LLVM21/usr/lib:$NATIVE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="$A/llvm21/usr/lib:$NATIVE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export LIBRARY_PATH="$NATIVE/usr/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
 if command -v ccache >/dev/null 2>&1; then
   export MRUSTC_CCACHE=1
