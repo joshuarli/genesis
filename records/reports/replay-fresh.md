@@ -90,6 +90,17 @@ by cargo is not ccached.
 self-build). The smoke and external suites run without it. Keep it for
 compiler-sized LTO builds.
 
+## Launcher same-version rebuild
+
+After the replay, `./scripts/launch.sh --rebuild-same-version 1.99.1` was run
+again against the builder work tree. It removed the prior self-build prefix
+and build directory, rebuilt from the 1.99.1 predecessor in 22:40, passed
+artifact verification, and the resulting prefix passed the same 7/7 static
+smoke suite. This is the public command, not a separate hand-run x.py command.
+It also exposed and fixed a portability bug: an older native package root
+lacked compiler-rt CRT objects that the rebuilt prefix already carried, so
+`install_prefix_runtime` now keeps existing self-contained inputs.
+
 ## Borrowed and excluded
 
 Borrowed, declared inputs: host cc/c++/clang/musl-dev, the Alpine LLVM 21 and
