@@ -1,42 +1,134 @@
 #!/bin/sh
-# S7 smoke runner: proc-macro / build.rs / FFI / threads-TLS / unwind.
-# Usage: tests/smoke/run.sh --prefix <toolchain-prefix>
+# Run Rust usability fixtures with the selected toolchain only.
 set -eu
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
 PREFIX=""
+WORK_DIR=""
+ONLY=""
+KEEP=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --prefix) PREFIX="${2:-}"; shift 2;;
-    *) echo "usage: run.sh --prefix <prefix>" >&2; exit 2;;
+    --prefix) PREFIX="${2:-}"; shift 2 ;;
+    --work-dir) WORK_DIR="${2:-}"; shift 2 ;;
+    --only) ONLY="${2:-}"; shift 2 ;;
+    --keep) KEEP=1; shift ;;
+    -h|--help)
+      echo "usage: tests/smoke/run.sh --prefix <toolchain-prefix> [--work-dir DIR] [--only case,...] [--keep]"
+      exit 0
+      ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 [ -n "$PREFIX" ] || { echo "missing --prefix" >&2; exit 2; }
+[ -d "$PREFIX" ] || { echo "no toolchain prefix: $PREFIX" >&2; exit 1; }
+PREFIX="$(cd "$PREFIX" && pwd)"
 [ -x "$PREFIX/bin/rustc" ] || { echo "no rustc in $PREFIX" >&2; exit 1; }
 [ -x "$PREFIX/bin/cargo" ] || { echo "no cargo in $PREFIX" >&2; exit 1; }
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-export PATH="$PREFIX/bin:$PATH"
+
+HOST="$("$PREFIX/bin/rustc" -vV | sed -n 's/^host: //p' | head -n1)"
+[ -n "$HOST" ] || { echo "cannot determine host from $PREFIX/bin/rustc" >&2; exit 1; }
+SYSROOT="$("$PREFIX/bin/rustc" --print sysroot)"
+SYSROOT_LIB="$SYSROOT/lib/rustlib/$HOST/lib"
+[ -d "$SYSROOT_LIB" ] || { echo "missing sysroot lib: $SYSROOT_LIB" >&2; exit 1; }
+WORK="${GENESIS_WORK:-$ROOT/.work}"
+mkdir -p "$WORK"
+WORK="$(cd "$WORK" && pwd)"
+
+export PATH="$PREFIX/bin:/usr/bin:/bin"
+export RUSTC="$PREFIX/bin/rustc"
+export RUSTDOC="$PREFIX/bin/rustdoc"
+export CARGO="$PREFIX/bin/cargo"
 export CARGO_NET_OFFLINE=true
-# Declared runtime env (borrowed native unwind, dev only).
-export LD_LIBRARY_PATH="$ROOT/../../.work/artifacts/seed-1.90/native/usr/lib:${LD_LIBRARY_PATH-}"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH-}"
+export CARGO_HOME="$WORK/cargo-home"
+export LD_LIBRARY_PATH="$SYSROOT_LIB${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export RUSTC_WRAPPER=
+export RUSTC_WORKSPACE_WRAPPER=
+
+cleanup() {
+  if [ "$KEEP" = "0" ] && [ -n "${TMP_ROOT:-}" ]; then
+    rm -rf "$TMP_ROOT"
+  fi
+}
+trap cleanup EXIT INT TERM
+
+if [ -n "$WORK_DIR" ]; then
+  TMP_ROOT="$WORK_DIR"
+  mkdir -p "$TMP_ROOT"
+  TMP_ROOT="$(cd "$TMP_ROOT" && pwd)"
+else
+  TMP_BASE="$WORK/tmp"
+  mkdir -p "$TMP_BASE"
+  TMP_ROOT="$(mktemp -d "$TMP_BASE/smoke.XXXXXX")"
+fi
+export CARGO_TARGET_DIR="$TMP_ROOT/target"
+mkdir -p "$CARGO_TARGET_DIR"
+
+selected() {
+  [ -z "$ONLY" ] && return 0
+  case ",$ONLY," in
+    *",$1,"*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+fail() {
+  echo "FAIL: $*" >&2
+  exit 1
+}
+
 pass=0
 run_case() {
-  name="$1"; dir="$2"; bin="$3"; expect="$4"
+  name="$1"
+  dir="$2"
+  bin="$3"
+  expect="$4"
+  selected "$name" || return 0
   echo "--- $name ---"
-  (cd "$dir" && cargo build --offline --release 2>&1 | tail -2)
-  out=$("$dir/target/release/$bin")
+  log="$TMP_ROOT/$name-build.log"
+  if (cd "$dir" && "$PREFIX/bin/cargo" build --offline --release) >"$log" 2>&1; then
+    tail -n 2 "$log"
+  else
+    rc=$?
+    echo "FAIL: $name build failed (exit $rc)" >&2
+    cat "$log" >&2
+    exit "$rc"
+  fi
+  exe="$CARGO_TARGET_DIR/release/$bin"
+  [ -x "$exe" ] || fail "$name: expected executable missing: $exe"
+  out="$("$exe")" || fail "$name: executable failed"
   echo "$out"
-  echo "$out" | grep -q "$expect" || { echo "FAIL: $name (missing '$expect')" >&2; exit 1; }
+  echo "$out" | grep -q "$expect" || fail "$name: missing '$expect'"
   pass=$((pass + 1))
 }
-run_case "proc-macro-derive" "$ROOT/pm-user" "pm-user" "pm ok"
-run_case "build-rs" "$ROOT/buildrs" "buildrs" "buildrs ok"
-run_case "ffi-cc" "$ROOT/ffivec" "ffivec" "ffi ok"
-echo "--- threads-tls ---"
-$PREFIX/bin/rustc -O "$ROOT/threads.rs" -o /tmp/opencode/s7-threads
-/tmp/opencode/s7-threads | grep -q "threads ok" || exit 1
-pass=$((pass + 1))
-echo "--- unwind ---"
-$PREFIX/bin/rustc -O "$ROOT/unwind.rs" -o /tmp/opencode/s7-unwind
-/tmp/opencode/s7-unwind | grep -q "unwind ok" || exit 1
-pass=$((pass + 1))
+
+run_rustc_case() {
+  name="$1"
+  src="$2"
+  expect="$3"
+  selected "$name" || return 0
+  echo "--- $name ---"
+  out_bin="$TMP_ROOT/$name"
+  log="$TMP_ROOT/$name-rustc.log"
+  if "$PREFIX/bin/rustc" -O "$src" -o "$out_bin" >"$log" 2>&1; then
+    tail -n 2 "$log"
+  else
+    rc=$?
+    echo "FAIL: $name compile failed (exit $rc)" >&2
+    cat "$log" >&2
+    exit "$rc"
+  fi
+  out="$("$out_bin")" || fail "$name: executable failed"
+  echo "$out"
+  echo "$out" | grep -q "$expect" || fail "$name: missing '$expect'"
+  pass=$((pass + 1))
+}
+
+run_case proc-macro-derive "$HERE/pm-user" pm-user "pm ok"
+run_case build-rs "$HERE/buildrs" buildrs "buildrs ok"
+run_case ffi-cc "$HERE/ffivec" ffivec "ffi ok"
+run_rustc_case threads-tls "$HERE/threads.rs" "threads ok"
+run_rustc_case unwind "$HERE/unwind.rs" "unwind ok"
+run_rustc_case hello "$HERE/hello.rs" "hello"
+
 echo "SMOKE_SUITE_OK cases=$pass"

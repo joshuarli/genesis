@@ -1,81 +1,173 @@
 #!/bin/sh
-# S1 launch skeleton: resumable entry for seed and later stages.
-# S2 owns real seed execution; this skeleton prepares dirs and checks pins.
+# Build, verify, or inspect the pinned Rust bootstrap chain.
 set -eu
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# Declared runtime env for our prefixes (borrowed native unwind, dev only).
-export LD_LIBRARY_PATH="$ROOT/.work/artifacts/seed-1.90/native/usr/lib:${LD_LIBRARY_PATH-}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/../recipes/common.sh"
+
 usage() {
-  echo "usage: scripts/launch.sh --until <stage> [--verify-local] [--rebuild-same-version <ver>]"
-  echo "stages: seed seed-1.90 1.91.1 ref-1.96.0 ext-<ver> self-<ver>"
+  cat <<'EOF'
+usage: scripts/launch.sh [--until STAGE] [--verify [STAGE]] [--status] [--list]
+                         [--rebuild-same-version VERSION] [--force]
+
+STAGE is seed, seed-1.90, 1.91.1, 1.92.0, 1.93.1, 1.94.1, 1.95.0,
+ref-1.96.0, ext-1.96.1, ext-1.97.1, ext-1.98.1, ext-1.99.1, self-1.99.1.
+--until builds the named stage and its missing prerequisites.
+--verify inspects existing artifacts without building.
+--status reports not-attempted, incomplete, failed, or passed per stage.
+--rebuild-same-version builds self-<version> from its same-version predecessor.
+EOF
 }
+
+canonical_stage() {
+  case "$1" in
+    1.91.1|1.92.0|1.93.1|1.94.1|1.95.0) echo "$1" ;;
+    1.96.0|ref-1.96.0) echo "ref-1.96.0" ;;
+    1.96.1) echo "ext-1.96.1" ;;
+    1.97.1) echo "ext-1.97.1" ;;
+    1.98.1) echo "ext-1.98.1" ;;
+    1.99.1|ext-1.99.1) echo "ext-1.99.1" ;;
+    self-1.99.1) echo "self-1.99.1" ;;
+    seed|seed-1.90) echo "$1" ;;
+    *) return 1 ;;
+  esac
+}
+
+stage_recipe() {
+  case "$1" in
+    seed) echo "$ROOT/recipes/seed-tools.sh" ;;
+    seed-1.90) echo "$ROOT/recipes/seed-rust.sh" ;;
+    *) echo "$ROOT/recipes/build-rust.sh" ;;
+  esac
+}
+
+build_stage() {
+  stage="$1"
+  if verify_stage "$stage" >/dev/null 2>&1; then
+    note "stage $stage already complete (no build performed)"
+    state_write "$stage" passed "verified existing artifacts"
+    return 0
+  fi
+  if [ "$FORCE" = "1" ] && [ "$stage" = "$FORCE_STAGE" ]; then
+    prefix="$(stage_prefix "$stage")"
+    case "$prefix" in
+      "$WORK"/*) rm -rf "$prefix" ;;
+      *) die "refusing to remove prefix outside work dir: $prefix" ;;
+    esac
+    if [ "$stage" != "seed" ] && [ "$stage" != "seed-1.90" ]; then
+      artifact="$(release_field "$stage" artifact)"
+      build_dir="$BUILDS/$artifact"
+      case "$build_dir" in
+        "$WORK"/*) rm -rf "$build_dir" ;;
+        *) die "refusing to remove build dir outside work dir: $build_dir" ;;
+      esac
+    fi
+    note "forced rebuild: removed $prefix"
+  fi
+  recipe="$(stage_recipe "$stage")"
+  if [ "$stage" = "seed" ] || [ "$stage" = "seed-1.90" ]; then
+    run_stage "$stage" "$recipe"
+  else
+    run_stage "$stage" "$recipe" --stage "$stage"
+  fi
+}
+
+build_until() {
+  plan=""
+  current="$1"
+  while [ -n "$current" ]; do
+    plan="$current $plan"
+    current="$(stage_deps "$current")"
+  done
+  for build_target in $plan; do
+    build_stage "$build_target"
+  done
+}
+
+print_status() {
+  printf '%-14s %-14s %-8s %s\n' "STAGE" "STATE" "VERSION" "ARTIFACT"
+  for stage in $(all_stages); do
+    state="$(stage_state "$stage")"
+    version="$(stage_version "$stage" 2>/dev/null || echo '?')"
+    artifact="$(stage_prefix "$stage" 2>/dev/null || echo '?')"
+    printf '%-14s %-14s %-8s %s\n' "$stage" "$state" "$version" "$artifact"
+    detail="$(state_detail "$stage")"
+    [ -n "$detail" ] && printf '  last: %s\n' "$detail"
+  done
+  return 0
+}
+
 UNTIL=""
-VERIFY_LOCAL=0
+VERIFY_STAGE=""
+VERIFY_ONLY=0
+STATUS=0
+LIST=0
 REBUILD=""
+FORCE=0
+FORCE_STAGE=""
+
 while [ $# -gt 0 ]; do
   case "$1" in
-    --until) UNTIL="${2:-}"; shift 2;;
-    --verify-local) VERIFY_LOCAL=1; shift;;
-    --rebuild-same-version) REBUILD="${2:-}"; shift 2;;
-    -h|--help) usage; exit 0;;
-    *) echo "launch: unknown arg $1" >&2; usage >&2; exit 2;;
+    --until) UNTIL="${2:-}"; shift 2 ;;
+    --verify)
+      VERIFY_ONLY=1
+      if [ $# -gt 1 ] && [ "${2#-}" = "$2" ]; then VERIFY_STAGE="$2"; shift 2; else shift; fi
+      ;;
+    --status) STATUS=1; shift ;;
+    --list) LIST=1; shift ;;
+    --rebuild-same-version) REBUILD="${2:-}"; shift 2 ;;
+    --force) FORCE=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) die "unknown argument: $1" ;;
   esac
 done
-[ -n "$UNTIL" ] || [ -n "$REBUILD" ] || { usage >&2; exit 2; }
-[ -f "$ROOT/.work/pins/stagex-rust.json" ] || { echo "launch: pins missing, run doctor first" >&2; exit 1; }
-mkdir -p "$ROOT/.work/build/seed" "$ROOT/.work/logs/seed"
-if [ -n "$UNTIL" ]; then
-case "$UNTIL" in
-  seed|seed-1.90)
-    echo "launch: stage=$UNTIL prepared (S1 skeleton; S2 owns compilation)"
-    echo "launch: dirs .work/build/seed .work/logs/seed ready; resumable rerun is no-op"
-    if [ -x "$ROOT/.work/build/seed/mrustc-0.12.0/bin/mrustc" ] && [ -x "$ROOT/.work/build/seed/mrustc-0.12.0/bin/minicargo" ]; then
-      echo "launch: seed binaries present (S2 built)"
-    else
-      echo "launch: seed binaries not yet built (expected until S2 runs)"
-    fi
-    ;;
-  1.91.1|ext-*|self-*)
-    echo "launch: stage $UNTIL not yet implemented (owned by S4/S6/S7)" >&2
-    exit 2
-    ;;
-  ref-1.96.0)
-    P="$ROOT/.work/artifacts/ref-1.96.0/prefix"
-    LOG="$ROOT/.work/logs/ref-1.96.0/build.log"
-    [ -x "$P/bin/rustc" ] || { echo "launch: ref-1.96.0 rustc missing" >&2; exit 1; }
-    [ -x "$P/bin/cargo" ] || { echo "launch: ref-1.96.0 cargo missing" >&2; exit 1; }
-    echo "launch: ref-1.96.0 present: $("$P/bin/rustc" --version), $("$P/bin/cargo" --version)"
-    if [ "$VERIFY_LOCAL" = "1" ]; then
-      [ -f "$LOG" ] || { echo "launch: leaf build log missing" >&2; exit 1; }
-      grep -q "BUILD_ONE_OK" "$LOG" || { echo "launch: no successful build marker" >&2; exit 1; }
-      grep -q "Building stage" "$LOG" || { echo "launch: no local stage-build evidence" >&2; exit 1; }
-      grep -q "Compiling core" "$LOG" || { echo "launch: no local core-compile evidence" >&2; exit 1; }
-      if grep -Ei "downloading (rustc|cargo|rust-std)|fetching toolchain|download-ci-llvm.*http" "$LOG"; then
-        echo "launch: toolchain download detected, not a local leaf build" >&2; exit 1
-      fi
-      for f in "$P/lib/rustlib/x86_64-unknown-linux-musl/lib/libstd-"*.rlib "$P/lib/librustc_driver-"*.so "$P/bin/cargo" "$P/lib/rustlib/x86_64-unknown-linux-musl/lib/self-contained/libc.a"; do
-        [ -e "$f" ] || { echo "launch: required runtime file missing: $f" >&2; exit 1; }
-      done
-      echo "launch: verify-local PASS (local leaf build, no toolchain import, runtime files present)"
-      VERIFY_LOCAL=0
-    fi
-    ;;
-  *) echo "launch: unknown stage $UNTIL" >&2; exit 2;;
-esac
+
+if [ "$LIST" = "1" ]; then
+  for stage in $(all_stages); do
+    printf '%-14s deps: %s\n' "$stage" "$(stage_deps "$stage")"
+  done
+  exit 0
 fi
-if [ "$VERIFY_LOCAL" = "1" ]; then
-  echo "launch: --verify-local only supported with --until ref-1.96.0" >&2
-  exit 2
+
+if [ "$STATUS" = "1" ]; then
+  print_status
+  exit 0
 fi
+
 if [ -n "$REBUILD" ]; then
-  P="$ROOT/.work/artifacts/self-$REBUILD/prefix"
-  LOG="$ROOT/.work/logs/self-$REBUILD/build-attempt2.log"
-  [ -f "$LOG" ] || LOG="$ROOT/.work/logs/self-$REBUILD/build.log"
-  [ -x "$P/bin/rustc" ] || { echo "launch: self-build rustc missing: $P" >&2; exit 1; }
-  [ -f "$LOG" ] || { echo "launch: self-build log missing" >&2; exit 1; }
-  grep -q "Building stage" "$LOG" || { echo "launch: no local stage-build evidence" >&2; exit 1; }
-  grep -q "Compiling core" "$LOG" || { echo "launch: no local core-compile evidence" >&2; exit 1; }
-  echo "launch: same-version rebuild $REBUILD present: $("$P/bin/rustc" --version)"
-  echo "launch: rebuilt tools execute real compilation (fresh workdir log, not uplift)"
+  case "$REBUILD" in
+    1.99.1) REBUILD_STAGE="self-1.99.1" ;;
+    *) die "same-version rebuild is implemented for 1.99.1 only" ;;
+  esac
+  UNTIL="$REBUILD_STAGE"
+  FORCE_STAGE="$REBUILD_STAGE"
 fi
-exit 0
+
+if [ "$VERIFY_ONLY" = "1" ]; then
+  if [ -n "$VERIFY_STAGE" ]; then
+    stage="$(canonical_stage "$VERIFY_STAGE")" || die "unknown or unsupported stage: $VERIFY_STAGE"
+    if ! verify_stage "$stage"; then
+      die "verify failed for $stage"
+    fi
+    note "verify $stage: artifact check passed"
+    note "this checks the installed artifacts; it does not prove build ancestry"
+    exit 0
+  fi
+  fail=0
+  for stage in $(all_stages); do
+    if verify_stage "$stage" >/dev/null 2>&1; then
+      note "verify $stage: pass"
+    else
+      note "verify $stage: missing-or-invalid"
+      fail=1
+    fi
+  done
+  [ "$fail" = "0" ] || exit 1
+  exit 0
+fi
+
+[ -n "$UNTIL" ] || { usage >&2; exit 2; }
+stage="$(canonical_stage "$UNTIL")" || die "unknown or unsupported stage: $UNTIL"
+note "work dir: $WORK"
+note "target: $UNTIL (stage $stage)"
+build_until "$stage"
+note "build $UNTIL: pass"

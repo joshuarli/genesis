@@ -1,54 +1,82 @@
 #!/bin/sh
-# S9 lower-chain recipe: records the compiler-producing path from the seed
-# stages to the final Rust, with per-input provenance, and reruns a consumer
-# under a rebuilt (new-identity) native component.
-# Usage: recipes/lower-chain.sh --verify | --replay --report
-# --verify: checks the recorded path exists, classifies every lower input as
-#   rebuilt ( Adel: this lineage) or borrowed (declared, S10 must exclude),
-#   and reruns the smoke consumer against the rebuilt unwind/CRT set.
-# --replay --report: S10 entry (fresh output/cache namespace; sources shared).
+# Lower-chain and Rust-PoC operations with honest failure states.
 set -eu
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-LOWER="$ROOT/.work/lower"
-MODE="${1:-}"
-[ "$MODE" = "--verify" ] || [ "$MODE" = "--replay" ] || { echo "usage: lower-chain.sh --verify | --replay --report" >&2; exit 2; }
-if [ "$MODE" = "--replay" ]; then
-  shift
-  [ "${1:-}" = "--report" ] || { echo "usage: lower-chain.sh --replay --report" >&2; exit 2; }
-  echo "lower-chain: replay report belongs to S10 (see .work/replay/REPORT.md when present)"
-  [ -f "$ROOT/.work/replay/REPORT.md" ] && cat "$ROOT/.work/replay/REPORT.md" || echo "lower-chain: no replay yet"
-  exit 0
-fi
-echo "=== lower-chain --verify ==="
-fail=0
-check() { if [ -e "$1" ]; then echo "present: $1"; else echo "MISSING: $1"; fail=1; fi; }
-echo "--- stage: borrowed native toolchain (declared inputs, S10-excluded) ---"
-command -v cc >/dev/null && echo "present: host cc ($(cc --version | head -n1))"
-command -v clang >/dev/null && echo "present: host clang ($(clang --version | head -n1))"
-check "$ROOT/.work/artifacts/seed-1.90/llvm21/usr/lib/llvm21/bin/llvm-config"
-check "$ROOT/.work/artifacts/ext-1.99.1/llvm23/usr/lib/llvm23/bin/llvm-config"
-echo "--- stage: mrustc + seed (this lineage) ---"
-check "$ROOT/.work/build/seed/mrustc-0.12.0/bin/mrustc"
-check "$ROOT/.work/artifacts/seed-1.90/install/bin/rustc"
-echo "--- stage: ladder checkpoints (this lineage) ---"
-for v in 1.91.1 1.92.0 1.93.1 1.94.1 1.95.0; do
-  check "$ROOT/.work/artifacts/$v/prefix/bin/rustc"
-done
-check "$ROOT/.work/artifacts/ref-1.96.0/prefix/bin/rustc"
-for v in 1.96.1 1.97.1 1.98.1 1.99.1; do
-  check "$ROOT/.work/artifacts/ext-$v/prefix/bin/rustc"
-done
-check "$ROOT/.work/artifacts/self-1.99.1/prefix/bin/rustc"
-echo "--- stage: rebuilt native components (new identity) ---"
-if [ -d "$LOWER/rebuilt" ]; then
-  ls "$LOWER/rebuilt" | while IFS= read -r f; do echo "rebuilt: $f"; done
-else
-  echo "note: no rebuilt components yet"
-fi
-echo "--- consumer rerun under rebuilt identity ---"
-if [ -x "$LOWER/rebuilt/smoke-unwind" ]; then
-  "$LOWER/rebuilt/smoke-unwind" || fail=1
-else
-  echo "note: rebuilt-identity consumer not yet linked (S9 work in progress)"
-fi
-[ "$fail" = "0" ] && echo "VERIFY_OK" || { echo "VERIFY_FAIL" >&2; exit 1; }
+HERE="$(cd "$(dirname "$0")" && pwd)"
+. "$HERE/common.sh"
+
+usage() {
+  cat <<'EOF'
+usage: recipes/lower-chain.sh <command> [options]
+
+commands:
+  inventory            list chain artifacts and rebuilt lower components
+  verify-rust-poc      run the functional tests against the final prefix
+  replay-rust-chain    execute a fresh build (recipes/replay.sh)
+  verify-lower-closure fail unless compiler-producing consumers were rebuilt
+  show-report          print the recorded lower/replay reports, if any
+EOF
+}
+
+cmd="${1:-}"
+[ -n "$cmd" ] || { usage >&2; exit 2; }
+shift || true
+
+inventory() {
+  echo "=== chain inventory ==="
+  for stage in $(all_stages); do
+    state="$(stage_state "$stage")"
+    printf '%-14s %-14s %s\n' "$stage" "$state" "$(stage_prefix "$stage" 2>/dev/null || echo '?')"
+  done
+  echo "=== rebuilt lower components ==="
+  if [ -d "$WORK/lower/rebuilt" ]; then
+    find "$WORK/lower/rebuilt" -maxdepth 3 -type f | sort | sed -n '1,80p'
+  else
+    echo "none"
+  fi
+  echo "inventory: complete (this command does not verify ancestry)"
+}
+
+verify_rust_poc() {
+  FINAL_STAGE="ext-1.99.1"
+  PREFIX="$(stage_prefix "$FINAL_STAGE")"
+  verify_stage "$FINAL_STAGE" >/dev/null 2>&1 || die "final toolchain is not built: $FINAL_STAGE"
+  echo "=== Rust PoC: smoke ==="
+  "$ROOT/tests/smoke/run.sh" --prefix "$PREFIX"
+  echo "=== Rust PoC: external CLI ==="
+  "$ROOT/tests/external/run.sh" --prefix "$PREFIX"
+  echo "RUST_POC_OK"
+}
+
+verify_lower_closure() {
+  echo "=== lower closure ==="
+  fail=0
+  [ -d "$WORK/lower/rebuilt" ] || { echo "MISSING: $WORK/lower/rebuilt"; fail=1; }
+  [ -f "$WORK/lower/rebuilt/lib/libunwind.a" ] || { echo "MISSING: rebuilt libunwind.a"; fail=1; }
+  [ -x "$WORK/lower/rebuilt/smoke-unwind" ] || { echo "MISSING: rebuilt-identity smoke consumer"; fail=1; }
+  if [ ! -f "$WORK/lower/consumers-rebuilt" ]; then
+    echo "INCOMPLETE: no compiler-producing consumer (mrustc, seed rustc, or ladder rustc)"
+    echo "INCOMPLETE: was rebuilt under the rebuilt lower lineage"
+    echo "INCOMPLETE: relinking a smoke program does not change the Rust compiler ancestry"
+    fail=1
+  fi
+  if [ "$fail" = "0" ]; then
+    echo "LOWER_CLOSURE_OK"
+  else
+    echo "LOWER_CLOSURE_INCOMPLETE" >&2
+    exit 1
+  fi
+}
+
+case "$cmd" in
+  inventory) inventory ;;
+  verify-rust-poc) verify_rust_poc ;;
+  replay-rust-chain) exec "$ROOT/recipes/replay.sh" "$@" ;;
+  verify-lower-closure) verify_lower_closure ;;
+  show-report)
+    for f in "$WORK/lower/REPORT.md" "$WORK/replay/REPORT.md"; do
+      if [ -f "$f" ]; then echo "=== $f ==="; cat "$f"; else echo "=== $f: absent ==="; fi
+    done
+    ;;
+  -h|--help) usage ;;
+  *) usage >&2; exit 2 ;;
+esac

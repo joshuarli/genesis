@@ -1,0 +1,36 @@
+diff --git a/rustc-1.90.0-src.patch b/rustc-1.90.0-src.patch
+index 7566c00f..0c928f67 100644
+--- a/rustc-1.90.0-src.patch
++++ b/rustc-1.90.0-src.patch
+@@ -9,13 +9,15 @@
+      use rustc_data_structures::static_assert_size;
+ --- compiler/rustc_errors/src/lib.rs
+ +++ compiler/rustc_errors/src/lib.rs
+-@@ -102,5 +102,6 @@
++@@ -102,7 +102,8 @@
+  // `PResult` is used a lot. Make sure it doesn't unintentionally get bigger.
+  #[cfg(target_pointer_width = "64")]
+  rustc_data_structures::static_assert_size!(PResult<'_, ()>, 24);
+ +#[cfg(not(rust_compiler="mrustc"))]
+  #[cfg(target_pointer_width = "64")]
+  rustc_data_structures::static_assert_size!(PResult<'_, bool>, 24);
++
++ /// Used to avoid depending on `rustc_middle` in `rustc_attr_parsing`.
+ --- compiler/rustc_parse/src/parser/mod.rs
+ +++ compiler/rustc_parse/src/parser/mod.rs
+ @@ -229,3 +229,4 @@
+@@ -28,11 +30,13 @@
+ --- compiler/rustc_middle/src/ty/sty.rs
+ +++ compiler/rustc_middle/src/ty/sty.rs
+-@@ -2026,4 +2026,4 @@
++@@ -2026,6 +2026,6 @@
+  impl<'tcx> rustc_type_ir::inherent::Tys<TyCtxt<'tcx>> for &'tcx ty::List<Ty<'tcx>> {
+      fn inputs(self) -> &'tcx [Ty<'tcx>] {
+ -        self.split_last().unwrap().1
+ +        (**self).split_last().unwrap().1
+      }
++
++     fn output(self) -> Ty<'tcx> {
+ --- compiler/rustc_middle/src/ty/generic_args.rs
+ +++ compiler/rustc_middle/src/ty/generic_args.rs
+ @@ -703,7 +703,7 @@

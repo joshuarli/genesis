@@ -1,0 +1,234 @@
+schema = 1
+target = "x86_64-unknown-linux-musl"
+reference_endpoint = "1.96.0"
+
+[host]
+required = ["cc", "c++", "clang", "python3", "make", "tar", "sha256sum", "curl", "ccache", "mold"]
+musl_dev = true
+
+[sources.mrustc]
+url = "https://github.com/thepowersgang/mrustc/archive/refs/tags/v0.12.0.tar.gz"
+sha256 = "c1ba35f5fc5c4ca2952d9f5526e900dcb6632ea7fd4d71fa58029b3bb563ae56"
+file = "mrustc-0.12.0.tar.gz"
+
+[sources.bstr]
+url = "https://github.com/BurntSushi/bstr/archive/refs/tags/1.12.1.tar.gz"
+sha256 = "d2cce684afaa461439000b3e91c133fc525a2477d78f50196d1e4ddde0d48934"
+file = "bstr-1.12.1.tar.gz"
+
+[sources.rust1_90_0]
+url = "https://static.rust-lang.org/dist/rustc-1.90.0-src.tar.gz"
+sha256 = "799a9f9cba4ed5351e071048bcf6b5560755d9009648def33a407dd4961f9b7e"
+file = "rustc-1.90.0-src.tar.gz"
+
+[sources.rust1_91_1]
+url = "https://static.rust-lang.org/dist/rustc-1.91.1-src.tar.gz"
+sha256 = "38dce205d39f61571261f0444237a1ce9efecb970e760d8ec4d957af5b445723"
+file = "rustc-1.91.1-src.tar.gz"
+
+[sources.rust1_92_0]
+url = "https://static.rust-lang.org/dist/rustc-1.92.0-src.tar.gz"
+sha256 = "9e0d2ca75c7e275fdc758255bf4b03afb3d65d1543602746907c933b6901c3b8"
+file = "rustc-1.92.0-src.tar.gz"
+
+[sources.rust1_93_1]
+url = "https://static.rust-lang.org/dist/rustc-1.93.1-src.tar.gz"
+sha256 = "4c230a44b3d9c9f3cef950943719f8380058d27c91fda5e36a9a947ef013e01f"
+file = "rustc-1.93.1-src.tar.gz"
+
+[sources.rust1_94_1]
+url = "https://static.rust-lang.org/dist/rustc-1.94.1-src.tar.gz"
+sha256 = "4c142a625f12e3cdf716c68ae19f4f60d98ad1482627b08579b15838e95ad514"
+file = "rustc-1.94.1-src.tar.gz"
+
+[sources.rust1_95_0]
+url = "https://static.rust-lang.org/dist/rustc-1.95.0-src.tar.gz"
+sha256 = "ea9b82a83e46967537c3569ce9d6fa16811c043a96e651376c349e70241ca515"
+file = "rustc-1.95.0-src.tar.gz"
+
+[sources.rust1_96_0]
+url = "https://static.rust-lang.org/dist/rustc-1.96.0-src.tar.gz"
+sha256 = "e90a9eb153b2948afac840dbe9d77b64e376706f2864387ee7717f7450043b44"
+file = "rustc-1.96.0-src.tar.gz"
+
+[sources.rust1_96_1]
+url = "https://static.rust-lang.org/dist/rustc-1.96.1-src.tar.gz"
+sha256 = "d0a9b5198c41868538ae12af28064163551d06dcceab11ef0b1bc9aa6e98b7a7"
+file = "rustc-1.96.1-src.tar.gz"
+
+[sources.rust1_97_1]
+url = "https://static.rust-lang.org/dist/rustc-1.97.1-src.tar.gz"
+sha256 = "622c2b429c53cbfdc0dd3a51d03554e91cd63ebec1912c1f5709640cdfef1a9d"
+file = "rustc-1.97.1-src.tar.gz"
+
+[sources.rust1_98_1]
+url = "https://static.rust-lang.org/dist/rustc-1.98.1-src.tar.gz"
+sha256 = "dc9f8b917b32444d6c7ac43cc1b409013d3a9a633338bb60c14cdae1d15ee65a"
+file = "rustc-1.98.1-src.tar.gz"
+
+[sources.rust1_99_1]
+url = "https://static.rust-lang.org/dist/rustc-1.99.1-src.tar.gz"
+sha256 = "db56bbc64db491ceda6b78a2811a6d121c639338906fd944f720289cbd02245c"
+file = "rustc-1.99.1-src.tar.gz"
+
+[native.llvm21]
+base_url = "https://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64"
+repo = "alpine-v3.24-main"
+
+[native.llvm21.packages]
+llvm21 = { version = "21.1.8-r1", sha256 = "28e9f0b24c9ea43437292061c0dc6766a982e606a09074bbbc0fb8e4b06e5d20" }
+llvm21-dev = { version = "21.1.8-r1", sha256 = "50c8bcc5e041405a340d7cc6379a651a4a1bbd65ae41dd0b42b75403fb2be440" }
+llvm21-libs = { version = "21.1.8-r1", sha256 = "3fa4a0c371611934f310cbde61cf62b061fe855c86309a957429f611172f6464" }
+llvm21-static = { version = "21.1.8-r1", sha256 = "3bbbaa38c13e11a75ec90af4bd7d01916a675045375e4c01f08e43fa66300d07" }
+llvm21-test-utils = { version = "21.1.8-r1", sha256 = "3f3c89b9e13c2f0787bcebaae02deb70ef917bf1a3b1b17471a6a0d997c29e31" }
+
+[native.llvm23]
+base_url = "https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64"
+repo = "alpine-edge-main"
+
+[native.llvm23.packages]
+llvm23 = { version = "23.1.4-r0", sha256 = "da685610a4b27faab7650a7793ce932850f8f63409d9ee8b47508946f3c2280e" }
+llvm23-dev = { version = "23.1.4-r0", sha256 = "a24c981f993bc2d2cdc2ae77f9322ad1e6ee8eabc17229dd0358349e0e67d7d3" }
+llvm23-libs = { version = "23.1.4-r0", sha256 = "2a92f892b8bc836ea5bdc6a2b6618c6ea59051c23ffb8da226e74dabbeed7601" }
+llvm23-static = { version = "23.1.4-r0", sha256 = "624af1d9a9f03fa1abbf7eeefdcb83a9c320d37350c369256521f07d141e654d" }
+llvm23-test-utils = { version = "23.1.4-r0", sha256 = "fc460bcc02890f006dea9beba8038450026f498add8b0c23e21c41f119959a1e" }
+
+[native.unwind]
+base_url = "https://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64"
+repo = "alpine-edge-main"
+
+[native.unwind.packages]
+compiler-rt = { version = "23.1.4-r0", sha256 = "e1c5ac3856272e8bf100f36ab4eba16e88173329056fa915928c4af321ec1961" }
+llvm-libunwind = { version = "23.1.4-r0", sha256 = "3e90c73caccd1b64f3eeb03111931a5f6280c7432aa6aecc71eb272c6dd7f2dc" }
+llvm-libunwind-dev = { version = "23.1.4-r0", sha256 = "0a8121e8f57dbaa86b610ea8cfcee36b26963ae658def95d7515fb3363e3d20b" }
+llvm-libunwind-static = { version = "23.1.4-r0", sha256 = "37f297c41663491626a21e31a0965b44e6b4da5d736a639511674e7fc0f5858c" }
+
+[patches.mrustc]
+patch = "patches/mrustc/patch.patch"
+upstream_fix = "patches/mrustc/aea331a4f60535eb6c146b82c50255334e4abf3a.patch"
+undefined_behavior = "patches/mrustc/mrustc-undefined-behavior.patch"
+
+[patches.rust]
+compat_1_91 = "patches/rust/1.91-compat-must-use.patch"
+compat_1_92 = "patches/rust/1.92-compat-must-use.patch"
+
+[files]
+"patches/mrustc/patch.patch" = "65b4be3c6798749c5f22fbca9cc7fafd1bfb62e09e6adbd040fb6ab8763c2fe0"
+"patches/mrustc/aea331a4f60535eb6c146b82c50255334e4abf3a.patch" = "16f6ac5043c067dfa9deab0611ecf6906b8bec115268f04285349826754cf518"
+"patches/mrustc/mrustc-undefined-behavior.patch" = "e6b6d88455a58ee3dc7ea07d4ff75b1f44eb940211b5349c6503773922124156"
+"patches/mrustc/bstr.patch" = "a944981e2744b7c8b46aaecbcd80d68b92d955f64feedef5516812faec308394"
+"patches/rust/1.91-compat-must-use.patch" = "8fabdd4ae5550cd8f7d8f1602f61d981e896c93a7d04e69e8df7c13263c12596"
+"patches/rust/1.92-compat-must-use.patch" = "cd36421ec6ab345eaa13469d512b2ed99c47c0306170ceefd0f76b29cd7c56fc"
+"support/tlskeys.c" = "163d9d24a9e5953ee73c03bd665671184af949d402c00c8dc3bc3c63f84df13a"
+
+
+[support]
+tlskeys = "support/tlskeys.c"
+
+[external.rustfilt]
+version = "0.2.1"
+manifest = "tests/external/rustfilt-0.2.1/Cargo.toml"
+lockfile = "tests/external/rustfilt-0.2.1/Cargo.lock"
+mode = "cargo-vendor"
+
+[[release]]
+stage = "1.91.1"
+artifact = "1.91.1"
+predecessor = "seed-1.90"
+source = "rust1_91_1"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+patch = "patches/rust/1.91-compat-must-use.patch"
+
+[[release]]
+stage = "1.92.0"
+artifact = "1.92.0"
+predecessor = "1.91.1"
+source = "rust1_92_0"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+patch = "patches/rust/1.92-compat-must-use.patch"
+
+[[release]]
+stage = "1.93.1"
+artifact = "1.93.1"
+predecessor = "1.92.0"
+source = "rust1_93_1"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+
+[[release]]
+stage = "1.94.1"
+artifact = "1.94.1"
+predecessor = "1.93.1"
+source = "rust1_94_1"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+
+[[release]]
+stage = "1.95.0"
+artifact = "1.95.0"
+predecessor = "1.94.1"
+source = "rust1_95_0"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+
+[[release]]
+stage = "ref-1.96.0"
+artifact = "ref-1.96.0"
+predecessor = "1.95.0"
+source = "rust1_96_0"
+mode = "final"
+llvm = "21"
+tools = "cargo,clippy,rustfmt,rust-demangler,src"
+
+[[release]]
+stage = "ext-1.96.1"
+artifact = "ext-1.96.1"
+predecessor = "1.95.0"
+source = "rust1_96_1"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+
+[[release]]
+stage = "ext-1.97.1"
+artifact = "ext-1.97.1"
+predecessor = "ext-1.96.1"
+source = "rust1_97_1"
+mode = "intermediate"
+llvm = "21"
+tools = "cargo"
+
+[[release]]
+stage = "ext-1.98.1"
+artifact = "ext-1.98.1"
+predecessor = "ext-1.97.1"
+source = "rust1_98_1"
+mode = "intermediate"
+llvm = "23"
+tools = "cargo"
+
+[[release]]
+stage = "ext-1.99.1"
+artifact = "ext-1.99.1"
+predecessor = "ext-1.98.1"
+source = "rust1_99_1"
+mode = "final"
+llvm = "23"
+tools = "cargo,clippy,rustfmt,rust-demangler,src"
+
+[[release]]
+stage = "self-1.99.1"
+artifact = "self-1.99.1"
+predecessor = "ext-1.99.1"
+source = "rust1_99_1"
+mode = "final"
+llvm = "23"
+tools = "cargo,clippy,rustfmt,rust-demangler,src"
+same_version = true
