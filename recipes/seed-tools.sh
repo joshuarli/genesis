@@ -31,8 +31,8 @@ if command -v ccache >/dev/null 2>&1; then
   export MRUSTC_CCACHE=1
 fi
 note "mrustc C++ compiler: $CXX_BIN"
-make -j"$JOBS" CXX="$CXX_BIN" CXXFLAGS="-g0 -O2"
-make -f minicargo.mk bin/minicargo
+make -j"$CXX_JOBS" CXX="$CXX_BIN" CXXFLAGS="-g0 -O2"
+make -f minicargo.mk CXX="$CXX_BIN" bin/minicargo
 
 verify_seed_tools
 echo "SEED_TOOLS_OK"
