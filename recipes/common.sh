@@ -367,6 +367,8 @@ verify_stage() {
       [ -x "$prefix/bin/cargo" ] || { echo "missing seed cargo"; return 1; }
       "$prefix/bin/rustc" --version 2>/dev/null | grep -q '^rustc 1\.90\.0' || { echo "seed rustc version mismatch"; return 1; }
       "$prefix/bin/cargo" --version 2>/dev/null | grep -q '^cargo 1\.90\.0' || { echo "seed cargo version mismatch"; return 1; }
+      sysroot="$("$prefix/bin/rustc" --print sysroot 2>/dev/null || true)"
+      [ -d "$sysroot/lib/rustlib/$TARGET/lib" ] || { echo "seed sysroot missing"; return 1; }
       ;;
     *) verify_prefix "$stage" ;;
   esac
