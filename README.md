@@ -75,6 +75,7 @@ GENESIS_WORK=/path/to/empty/work ./scripts/launch.sh --rebuild-same-version 1.99
 
 ```sh
 recipes/lower-chain.sh closure
+recipes/lower-chain.sh build
 recipes/lower-chain.sh inventory
 recipes/lower-chain.sh verify-rust-poc
 recipes/lower-chain.sh replay-rust-chain --work-dir .work/replay-fresh
@@ -82,10 +83,12 @@ recipes/lower-chain.sh verify-lower-closure
 ```
 
 `closure` resolves the pinned StageX build graph for `core-rust`; the measured
-35-package narrow closure is in `records/reports/lower-closure.md`.
-`verify-lower-closure` fails until compiler-producing consumers are rebuilt
-under the rebuilt lower lineage. Rebuilding libunwind and relinking a smoke
-program does not change the ancestry of the Rust compiler.
+35-package narrow closure is in `records/reports/lower-closure.md`. `build`
+rebuilds that closure from source without a preseed, extracts its 1.96.0
+toolchain, and extends it through 1.99.1 under the StageX lineage.
+`verify-lower-closure` fails until that build receipt and the same functional
+tests exist. Rebuilding libunwind alone does not change the ancestry of the
+Rust compiler.
 
 ## Layout
 
@@ -105,11 +108,11 @@ program does not change the ancestry of the Rust compiler.
 ## Declared build environment
 
 Linux x86-64 with musl, `cc`/`c++` (GCC 15 works), clang 23, Python 3.11+,
-GNU make, tar, curl, ccache, mold, binutils (`ar`, `readelf`), and the musl
+GNU make, tar, curl, git, ccache, mold, binutils (`ar`, `readelf`), and the musl
 development CRT/archive files
-(`/usr/lib/{rcrt1.o,crt1.o,Scrt1.o,crti.o,crtn.o,libc.a}`). Docker is only
-needed for the parked StageX lower-chain work. Network access is needed on the
-first run to fetch pinned sources and native packages.
+(`/usr/lib/{rcrt1.o,crt1.o,Scrt1.o,crti.o,crtn.o,libc.a}`). Docker is needed
+for the StageX lower-chain build. Network access is needed on the first run to
+fetch pinned sources and native packages.
 
 The native LLVM packages are borrowed build tools, not part of the claimed
 Rust ancestry. `sources.toml` records their repositories and full SHA-256
