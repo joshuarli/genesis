@@ -34,11 +34,13 @@ It never treats an existing log as a completed stage. `--verify` only inspects
 installed artifacts; it does not prove build ancestry. `--status` distinguishes
 `not-attempted`, `incomplete`, `failed`, and `passed`.
 
-A genuine same-version rebuild is a build, not a status check:
+A genuine same-version rebuild is a build, not a status check. `--until`
+builds it only when missing; `--rebuild-same-version` always removes the
+previous self-build tree and rebuilds it:
 
 ```sh
+./scripts/launch.sh --until self-1.99.1
 ./scripts/launch.sh --rebuild-same-version 1.99.1
-./scripts/launch.sh --rebuild-same-version 1.99.1 --force
 ```
 
 ## Fresh replay

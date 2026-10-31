@@ -15,6 +15,7 @@ ref-1.96.0, ext-1.96.1, ext-1.97.1, ext-1.98.1, ext-1.99.1, self-1.99.1.
 --verify inspects existing artifacts without building.
 --status reports not-attempted, incomplete, failed, or passed per stage.
 --rebuild-same-version builds self-<version> from its same-version predecessor.
+--force with --until rebuilds the named stage instead of reusing it.
 EOF
 }
 
@@ -42,11 +43,6 @@ stage_recipe() {
 
 build_stage() {
   stage="$1"
-  if verify_stage "$stage" >/dev/null 2>&1; then
-    note "stage $stage already complete (no build performed)"
-    state_write "$stage" passed "verified existing artifacts"
-    return 0
-  fi
   if [ "$FORCE" = "1" ] && [ "$stage" = "$FORCE_STAGE" ]; then
     prefix="$(stage_prefix "$stage")"
     case "$prefix" in
@@ -62,6 +58,11 @@ build_stage() {
       esac
     fi
     note "forced rebuild: removed $prefix"
+  fi
+  if verify_stage "$stage" >/dev/null 2>&1; then
+    note "stage $stage already complete (no build performed)"
+    state_write "$stage" passed "verified existing artifacts"
+    return 0
   fi
   recipe="$(stage_recipe "$stage")"
   if [ "$stage" = "seed" ] || [ "$stage" = "seed-1.90" ]; then
@@ -139,6 +140,7 @@ if [ -n "$REBUILD" ]; then
     *) die "same-version rebuild is implemented for 1.99.1 only" ;;
   esac
   UNTIL="$REBUILD_STAGE"
+  FORCE=1
   FORCE_STAGE="$REBUILD_STAGE"
 fi
 
