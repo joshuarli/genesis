@@ -310,10 +310,21 @@ install_prefix_runtime() {
     cp -f "/usr/lib/$f" "$self/$f"
   done
   crt="$native/usr/lib/llvm23/lib/clang/23/lib/x86_64-alpine-linux-musl"
-  [ -f "$crt/clang_rt.crtbegin-x86_64.o" ] || die "compiler-rt crtbegin missing: $crt"
-  cp -f "$crt/clang_rt.crtbegin-x86_64.o" "$self/crtbeginS.o"
-  cp -f "$crt/clang_rt.crtend-x86_64.o" "$self/crtendS.o"
-  cp -f "$native/usr/lib/libunwind.a" "$self/libunwind.a"
+  if [ -f "$crt/clang_rt.crtbegin-x86_64.o" ]; then
+    cp -f "$crt/clang_rt.crtbegin-x86_64.o" "$self/crtbeginS.o"
+    cp -f "$crt/clang_rt.crtend-x86_64.o" "$self/crtendS.o"
+  elif [ -f "$self/crtbeginS.o" ] && [ -f "$self/crtendS.o" ]; then
+    note "keeping compiler-rt CRT already present in $self"
+  else
+    die "compiler-rt CRT missing: $crt and no existing crtbeginS.o/crtendS.o"
+  fi
+  if [ -f "$native/usr/lib/libunwind.a" ]; then
+    cp -f "$native/usr/lib/libunwind.a" "$self/libunwind.a"
+  elif [ -f "$self/libunwind.a" ]; then
+    note "keeping libunwind.a already present in $self"
+  else
+    die "libunwind.a missing: $native and no existing self-contained archive"
+  fi
 }
 
 prefix_sysroot() {
