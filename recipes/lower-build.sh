@@ -11,6 +11,7 @@ LOWER_LOGS="$WORK/lower/logs"
 BUILDER_IMAGE="${GENESIS_LOWER_BUILDER:-genesis/lower-builder:1.96.0}"
 PREFIX_1_96="$LOWER_WORK/artifacts/stagex-1.96.0/prefix"
 LOWER_STAGES=""
+MIN_FREE_GB=512
 
 usage() {
   cat <<'EOF'
@@ -18,7 +19,8 @@ usage: recipes/lower-build.sh [--stage STAGE] [--skip-closure] [--skip-tests]
 
 Without options, builds the pinned StageX closure, extracts its 1.96.0
 toolchain, builds stagex-1.97.1 through stagex-1.99.1, and runs the same
-functional tests against the final StageX-lineage prefix.
+functional tests against the final StageX-lineage prefix. The build refuses
+to start unless at least 512 GB is free on the work and Docker filesystems.
 EOF
 }
 
@@ -35,6 +37,35 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+nearest_dir() {
+  path="$1"
+  while [ ! -d "$path" ]; do
+    path="$(dirname "$path")"
+  done
+  printf '%s\n' "$path"
+}
+
+free_gb() {
+  df -P "$1" | awk 'END { print int($4 / 1024 / 1024) }'
+}
+
+require_free_space() {
+  work_dir="$(nearest_dir "$LOWER_WORK")"
+  limit_dir="$work_dir"
+  limit_free="$(free_gb "$work_dir")"
+  docker_root="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || true)"
+  if [ -n "$docker_root" ] && [ -d "$docker_root" ]; then
+    docker_free="$(free_gb "$docker_root")"
+    if [ "$docker_free" -lt "$limit_free" ]; then
+      limit_dir="$docker_root"
+      limit_free="$docker_free"
+    fi
+  fi
+  [ "$limit_free" -ge "$MIN_FREE_GB" ] ||
+    die "StageX lower build requires at least ${MIN_FREE_GB} GB free; ${limit_dir} has ${limit_free} GB"
+}
+
+require_free_space
 mkdir -p "$LOWER_WORK" "$LOWER_LOGS"
 for stage in $(lower_stages); do
   [ "$(release_field "$stage" mode)" = "external" ] && continue

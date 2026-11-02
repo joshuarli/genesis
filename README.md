@@ -85,7 +85,8 @@ recipes/lower-chain.sh verify-lower-closure
 `closure` resolves the pinned StageX build graph for `core-rust`; the measured
 35-package narrow closure is in `records/reports/lower-closure.md`. `build`
 rebuilds that closure from source without a preseed, extracts its 1.96.0
-toolchain, and extends it through 1.99.1 under the StageX lineage.
+toolchain, and extends it through 1.99.1 under the StageX lineage. It refuses
+to start unless at least 512 GB is free on the work and Docker filesystems.
 `verify-lower-closure` fails until that build receipt and the same functional
 tests exist. Rebuilding libunwind alone does not change the ancestry of the
 Rust compiler.

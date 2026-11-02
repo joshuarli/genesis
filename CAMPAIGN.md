@@ -2,14 +2,14 @@
 
 ## Status
 
-paused 2026-11-02 with `.work/` at zero. `master` is green (doctor, runner
-tests, closure resolver, and the Rust 1.99.1 smoke/external acceptance). The
-StageX lower build driver is merged (`158d0d1`), but the full source closure
-was never completed: it is parked at `bootstrap-stage1`, so S9 remains
-incomplete and `recipes/lower-chain.sh verify-lower-closure` fails by design.
-The removed `.work/` held only downloads, builds, logs, caches, and prefixes;
-they are disposable and reproducible from `sources.toml` and the committed
-recipes.
+paused 2026-11-02 with `.work/` at zero, pending a host with at least 512 GB
+free. `master` is green (doctor, runner tests, closure resolver, and the Rust
+1.99.1 smoke/external acceptance). The StageX lower build driver is merged
+(`158d0d1`), but the full source closure was never completed: it is parked at
+`bootstrap-stage1`, so S9 remains incomplete and
+`recipes/lower-chain.sh verify-lower-closure` fails by design. The removed
+`.work/` held only downloads, builds, logs, caches, and prefixes; they are
+disposable and reproducible from `sources.toml` and the committed recipes.
 
 Last accepted code revision: `1e903f9`; the Rust 1.99.1 PoC, same-version
 rebuild, and fresh-checkout replay remain accepted. Closure measurement is
@@ -17,14 +17,15 @@ committed: 35 packages and 308 source archives
 (`records/reports/lower-closure.md`). No campaign process remains.
 
 Resume prompt: "Continue the Genesis campaign; finish the StageX lower
-closure." First command: `recipes/lower-chain.sh build` (recreates `.work/`).
+closure." First command: `recipes/lower-chain.sh build` (recreates `.work/`;
+the driver refuses to start below 512 GB free).
 
 Retry condition for S9: run `recipes/lower-chain.sh build` on a builder with
-enough time and storage to finish the pinned StageX `bootstrap` and `core-rust`
-targets, then the driver's 1.96.0-1.99.1 stages and functional tests. The
-previous builder needed a local `sitecustomize` shim that filtered
-`socket.getaddrinfo` to IPv4 for StageX fetches; recreate it only if fetches
-stall on IPv6.
+at least 512 GB free on the work and Docker filesystems, then finish the pinned
+StageX `bootstrap` and `core-rust` targets and the driver's 1.96.0-1.99.1
+stages and functional tests. The previous builder needed a local
+`sitecustomize` shim that filtered `socket.getaddrinfo` to IPv4 for StageX
+fetches; recreate it only if fetches stall on IPv6.
 
 ## Post-campaign repairs (2026-10-31)
 
@@ -102,7 +103,7 @@ Serial except where `parallel` is stated. Each item owns its files; sharing item
 
 ## Needs environment
 
-None outstanding on this builder (network + docker granted). If cgroup/memory or 344 GB disk blocks the late ladder or LLVM source build, record exact command, limit, and high-water mark here and park only that item. Full-distribution 500 GB reproduction is out of scope and never blocks local completion.
+The StageX lower build requires at least 512 GB free on the work and Docker filesystems. This host has about 200 GB, so S9 stays parked until the checkout moves to a larger machine. The driver enforces the floor before creating work state. This is a conservative floor for the narrow Rust closure with headroom; the full StageX distribution remains out of scope. If cgroup/memory blocks the late ladder or LLVM source build, record the exact command, limit, and high-water mark here and park only that item.
 
 ## Execution boundary and non-goals
 
