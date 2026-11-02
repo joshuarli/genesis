@@ -1,15 +1,26 @@
-# Rust bootstrap campaign — revision 2 preflighted
+# Rust bootstrap campaign — closed
 
 ## Status
 
-paused 2026-10-31. Resume prompt: "Continue the Genesis campaign; finish the StageX lower closure."
-First command: `git switch lower/build-driver && ./recipes/lower-chain.sh build`
+closed 2026-11-02. `master` is green (doctor, runner tests, closure resolver,
+and the Rust 1.99.1 smoke/external acceptance). The StageX lower build driver
+is merged (`158d0d1`), but the full source closure was never completed: it is
+parked at `bootstrap-stage1`, so S9 remains incomplete and
+`recipes/lower-chain.sh verify-lower-closure` fails by design. `.work/` was
+removed; its downloads, builds, logs, caches, and prefixes are disposable and
+reproducible from `sources.toml` and the committed recipes.
 
-Last accepted code revision: `1e903f9`; `master` is green (doctor, runner tests, closure resolver). The Rust 1.99.1 PoC and fresh-checkout replay remain accepted; S9 is incomplete.
-Closure measurement is committed: 35 packages and 308 source archives (`records/reports/lower-closure.md`). `bootstrap-stage0` is built; the local build is parked during `bootstrap-stage1` (GCC stage). No campaign process remains.
-Parked branch `lower/build-driver` (`d1636df`): lower build driver and real `verify-lower-closure` receipt. Not merged because the closure has never completed end-to-end.
-Retry condition: `make -C .work/lower/stagex-src bootstrap` and `make -C .work/lower/stagex-src core-rust` complete, then the driver builds `stagex-1.96.0` through `stagex-1.99.1` and the smoke plus external tests pass. The builder may need the local IPv4 fetch shim under `.work/lower/pyipv4`.
-Build state under `.work/lower/` is disposable; the pins and driver are committed. Next slice: finish that build, record the new identity, and accept S9 only when `recipes/lower-chain.sh verify-lower-closure` passes.
+Last accepted code revision before closeout: `1e903f9`; the Rust 1.99.1 PoC,
+same-version rebuild, and fresh-checkout replay remain accepted. Closure
+measurement is committed: 35 packages and 308 source archives
+(`records/reports/lower-closure.md`). No campaign process remains.
+
+Retry condition for S9: run `recipes/lower-chain.sh build` on a builder with
+enough time and storage to finish the pinned StageX `bootstrap` and `core-rust`
+targets, then the driver's 1.96.0-1.99.1 stages and functional tests. The
+previous builder needed a local `sitecustomize` shim that filtered
+`socket.getaddrinfo` to IPv4 for StageX fetches; recreate it only if fetches
+stall on IPv6.
 
 ## Post-campaign repairs (2026-10-31)
 
