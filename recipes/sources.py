@@ -23,7 +23,7 @@ def lookup(path):
 
 def main(argv):
     if len(argv) < 2:
-        fail("usage: sources.py <source|native|release|releases|list> ...")
+        fail("usage: sources.py <source|native|release|releases|list|host-required> ...")
     cmd = argv[1]
     if cmd == "source":
         node = lookup("sources." + argv[2])
@@ -50,6 +50,9 @@ def main(argv):
     elif cmd == "files":
         for path, digest in DATA["files"].items():
             print("%s\t%s" % (path, digest))
+    elif cmd == "host-required":
+        for tool in DATA["host"]["required"]:
+            print(tool)
     elif cmd == "field":
         print(lookup(argv[2]))
     elif cmd == "release-fields":

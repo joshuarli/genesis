@@ -8,11 +8,10 @@ fail() { echo "doctor FAIL: $*" >&2; exit 1; }
 info() { echo "doctor: $*"; }
 START="$(date +%s)"
 
-for tool in cc c++ clang python3 make tar sha256sum curl ar readelf git; do
+command -v python3 >/dev/null 2>&1 || fail "python3 not found"
+for tool in $(python3 "$SOURCES_PY" host-required); do
   command -v "$tool" >/dev/null 2>&1 || fail "$tool not found"
 done
-command -v ccache >/dev/null 2>&1 || fail "ccache not found (declared build environment)"
-command -v mold >/dev/null 2>&1 || fail "mold not found (declared build environment)"
 command -v docker >/dev/null 2>&1 || info "docker not found (needed for the StageX lower-chain lane)"
 
 [ -f "$SOURCES" ] || fail "input manifest missing: $SOURCES"

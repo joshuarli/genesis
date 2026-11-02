@@ -3,7 +3,7 @@ target = "x86_64-unknown-linux-musl"
 reference_endpoint = "1.96.0"
 
 [host]
-required = ["cc", "c++", "clang", "python3", "make", "tar", "sha256sum", "curl", "ccache", "mold", "ar", "readelf", "git"]
+required = ["cc", "c++", "clang", "python3", "make", "tar", "patch", "sha256sum", "curl", "ccache", "mold", "ar", "readelf", "git"]
 musl_dev = true
 
 [stagex]

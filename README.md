@@ -109,11 +109,12 @@ Rust compiler.
 ## Declared build environment
 
 Linux x86-64 with musl, `cc`/`c++` (GCC 15 works), clang 23, Python 3.11+,
-GNU make, tar, curl, git, ccache, mold, binutils (`ar`, `readelf`), and the musl
-development CRT/archive files
-(`/usr/lib/{rcrt1.o,crt1.o,Scrt1.o,crti.o,crtn.o,libc.a}`). Docker is needed
-for the StageX lower-chain build. Network access is needed on the first run to
-fetch pinned sources and native packages.
+GNU make, tar, patch, curl, git, ccache, mold, binutils (`ar`, `readelf`), and
+the musl development CRT/archive files
+(`/usr/lib/{rcrt1.o,crt1.o,Scrt1.o,crti.o,crtn.o,libc.a}`). Docker Engine 25+
+with the containerd image store is needed for the StageX lower-chain build.
+Network access is needed on the first run to fetch pinned sources and native
+packages.
 
 The native LLVM packages are borrowed build tools, not part of the claimed
 Rust ancestry. `sources.toml` records their repositories and full SHA-256
