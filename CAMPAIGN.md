@@ -1,19 +1,23 @@
-# Rust bootstrap campaign — closed
+# Rust bootstrap campaign — paused after cleanup
 
 ## Status
 
-closed 2026-11-02. `master` is green (doctor, runner tests, closure resolver,
-and the Rust 1.99.1 smoke/external acceptance). The StageX lower build driver
-is merged (`158d0d1`), but the full source closure was never completed: it is
-parked at `bootstrap-stage1`, so S9 remains incomplete and
-`recipes/lower-chain.sh verify-lower-closure` fails by design. `.work/` was
-removed; its downloads, builds, logs, caches, and prefixes are disposable and
-reproducible from `sources.toml` and the committed recipes.
+paused 2026-11-02 with `.work/` at zero. `master` is green (doctor, runner
+tests, closure resolver, and the Rust 1.99.1 smoke/external acceptance). The
+StageX lower build driver is merged (`158d0d1`), but the full source closure
+was never completed: it is parked at `bootstrap-stage1`, so S9 remains
+incomplete and `recipes/lower-chain.sh verify-lower-closure` fails by design.
+The removed `.work/` held only downloads, builds, logs, caches, and prefixes;
+they are disposable and reproducible from `sources.toml` and the committed
+recipes.
 
-Last accepted code revision before closeout: `1e903f9`; the Rust 1.99.1 PoC,
-same-version rebuild, and fresh-checkout replay remain accepted. Closure
-measurement is committed: 35 packages and 308 source archives
+Last accepted code revision: `1e903f9`; the Rust 1.99.1 PoC, same-version
+rebuild, and fresh-checkout replay remain accepted. Closure measurement is
+committed: 35 packages and 308 source archives
 (`records/reports/lower-closure.md`). No campaign process remains.
+
+Resume prompt: "Continue the Genesis campaign; finish the StageX lower
+closure." First command: `recipes/lower-chain.sh build` (recreates `.work/`).
 
 Retry condition for S9: run `recipes/lower-chain.sh build` on a builder with
 enough time and storage to finish the pinned StageX `bootstrap` and `core-rust`
